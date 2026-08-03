@@ -1,6 +1,7 @@
 # Render "Blueprint" (Infrastructure as Code) para o TimeTracker
 #
-# ID do blueprint/deploy (Render): d29e88824b410ce44f2610ea6eec30bd
+# ID do deploy recente (Render): exs-d9oemi37uimc7395oea0
+# ID do blueprint anterior (Render): d29e88824b410ce44f2610ea6eec30bd
 #
 # Arquitetura: UM único serviço web. O backend FastAPI serve a API (/api/v1)
 # e também a interface compilada (SPA) — tudo no mesmo domínio, sem CORS.
