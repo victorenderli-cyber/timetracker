@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime, date
@@ -300,3 +302,9 @@ class TimeBankRow(BaseModel):
     balance_hours: float
     overtime_hours: float
     absences: int
+
+
+# Pydantic v2 only builds forward references (User <-> TimeEntry etc.)
+# on first use; force resolution here so load works on Python 3.11 too.
+for _model in (UserWithRelations, TimeEntry, TimeEntryWithRelations, DashboardStats, TimeReport, HROverview):
+    _model.model_rebuild()
