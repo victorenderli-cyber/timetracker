@@ -4,7 +4,7 @@ import { timeEntriesApi } from '@/api'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useAuthStore } from '@/store/authStore'
-import { Play, Pause, Square, Plus, Timer, CalendarDays, CalendarRange, Clock, FolderKanban } from 'lucide-react'
+import { Play, Pause, Square, Plus, Timer, CalendarDays, CalendarRange, Clock, FolderKanban, Target } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -125,31 +125,87 @@ export function DashboardPage() {
   if (loading) return <PageSkeleton />
 
   const isPaused = stats?.active_entry?.status === 'paused'
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite'
+
+  const weekGoal = typeof user?.work_hours_per_day === 'number' ? user.work_hours_per_day * 5 : 40
+  const weekProgress = Math.min(1, (stats?.week_hours ?? 0) / weekGoal)
+  const goalPct = Math.round(weekProgress * 100)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Bem-vindo, {user?.full_name}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}, {user?.full_name?.split(' ')[0]}</h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })
+              .replace(/^./, (c) => c.toUpperCase())}
+          </p>
         </div>
         <Button onClick={() => navigate('/projects')}>
           <Plus className="h-4 w-4 mr-2" /> Novo projeto
         </Button>
       </div>
 
+      {/* Weekly goal ring */}
+      <Card className="!p-0">
+        <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 p-6">
+          <div className="relative w-28 h-28 shrink-0">
+            <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="44" fill="none" strokeWidth="10" className="stroke-gray-100 dark:stroke-gray-700" />
+              <circle
+                cx="50" cy="50" r="44" fill="none" strokeWidth="10" strokeLinecap="round"
+                className="stroke-primary-500 transition-all duration-700"
+                strokeDasharray={2 * Math.PI * 44}
+                strokeDashoffset={(1 - weekProgress) * 2 * Math.PI * 44}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xl font-bold text-gray-900 dark:text-gray-100">{goalPct}%</span>
+              <span className="text-[10px] uppercase tracking-wider text-gray-400">meta sem</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="h-4 w-4 text-primary-500" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Meta semanal</h3>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              Você registrou <span className="font-semibold text-gray-900 dark:text-gray-100">{stats?.week_hours ?? 0}h</span> de{' '}
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{weekGoal}h</span> esta semana.
+            </p>
+            <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-primary-500 to-primary-600"
+                style={{ width: `${weekProgress * 100}%` }}
+              />
+            </div>
+          </div>
+          <div className="hidden lg:flex items-end gap-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.week_hours ?? 0}</p>
+              <p className="text-xs text-gray-400">horas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-emerald-600">{weekGoal - (stats?.week_hours ?? 0) < 0 ? 0 : Math.round(weekGoal - (stats?.week_hours ?? 0))}</p>
+              <p className="text-xs text-gray-400">restantes</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
       {/* Timer card */}
       <Card>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-xl ${stats?.active_entry ? (isPaused ? 'bg-yellow-500 text-white' : 'bg-primary-600 text-white') : 'bg-gray-300 text-gray-600'}`}>
+            <div className={`p-3 rounded-xl ${stats?.active_entry ? (isPaused ? 'bg-yellow-500 text-white' : 'bg-primary-600 text-white') : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
               <Timer className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {stats?.active_entry?.description || (isPaused ? 'Timer pausado' : 'Nenhum timer ativo')}
               </p>
-              <p className="text-3xl font-mono font-bold text-gray-900">
+              <p className="text-3xl font-mono font-bold text-gray-900 dark:text-gray-100">
                 {stats?.active_entry ? formatDuration(elapsed) : '00:00:00'}
               </p>
             </div>

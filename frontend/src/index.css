@@ -15,6 +15,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.dark {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -23,6 +27,13 @@ body {
   background-image:
     radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.04) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.04) 0px, transparent 50%);
+}
+
+.dark body {
+  background-color: #0b1120;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
 }
 
 ::-webkit-scrollbar {
@@ -40,6 +51,13 @@ body {
   background: #9ca3af;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
@@ -48,28 +66,28 @@ body {
     @apply btn bg-primary-600 text-white hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-600/25 focus:ring-primary-500;
   }
   .btn-secondary {
-    @apply btn bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 focus:ring-gray-400;
+    @apply btn bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700 dark:hover:border-gray-600;
   }
   .btn-danger {
     @apply btn bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/25 focus:ring-red-500;
   }
   .btn-ghost {
-    @apply btn bg-transparent hover:bg-gray-100 focus:ring-gray-500;
+    @apply btn bg-transparent hover:bg-gray-100 focus:ring-gray-500 dark:hover:bg-gray-700;
   }
   .input {
-    @apply w-full px-3 py-2 border border-gray-200 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all duration-200;
+    @apply w-full px-3 py-2 border border-gray-200 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:focus:border-primary-500;
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1.5;
+    @apply block text-sm font-medium text-gray-700 mb-1.5 dark:text-gray-300;
   }
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-shadow duration-200;
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-shadow duration-200 dark:bg-gray-800/80 dark:border-gray-700;
   }
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
   .table-header {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50;
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50 dark:bg-gray-800 dark:text-gray-400;
   }
   .table-cell {
     @apply px-4 py-3;
@@ -121,4 +139,79 @@ body {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* ---- Dark mode utility overrides (retrofit para páginas com cores fixas) ---- */
+.dark .bg-white {
+  background-color: #1e293b;
+}
+.dark .bg-gray-50 {
+  background-color: #0f172a;
+}
+.dark .bg-gray-100 {
+  background-color: #1f2937;
+}
+.dark .bg-gray-50\/50 {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+.dark .hover\:bg-gray-50\/50:hover,
+.dark .hover\:bg-gray-50:hover {
+  background-color: rgba(30, 41, 59, 0.6);
+}
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-gray-50\/60:hover {
+  background-color: #1f2937;
+}
+.dark .text-gray-900 {
+  color: #f1f5f9;
+}
+.dark .text-gray-700 {
+  color: #d1d5db;
+}
+.dark .text-gray-600 {
+  color: #cbd5e1;
+}
+.dark .text-gray-500 {
+  color: #94a3b8;
+}
+.dark .text-gray-400 {
+  color: #64748b;
+}
+.dark .text-gray-300 {
+  color: #9ca3af;
+}
+.dark .border-gray-100 {
+  border-color: #1e293b;
+}
+.dark .border-gray-200 {
+  border-color: #334155;
+}
+.dark .border-gray-300 {
+  border-color: #475569;
+}
+.dark .bg-gray-300 {
+  background-color: #475569;
+}
+.dark .bg-primary-50 {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+.dark .bg-primary-100 {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+.dark .text-primary-700,
+.dark .text-primary-600 {
+  color: #93c5fd;
+}
+.dark .hover\:text-primary-600:hover {
+  color: #93c5fd;
+}
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b;
+}
+.dark input[type='date'],
+.dark input[type='month'],
+.dark input[type='datetime-local'],
+.dark input[type='color'],
+.dark select {
+  color-scheme: dark;
 }

@@ -23,6 +23,23 @@ def _workdays_in_month(year: int, month: int) -> int:
     return count
 
 
+def _workdays_for_user(user: UserModel, year: int, month: int) -> int:
+    """Dias úteis no mês, desconsiderando dias anteriores à data de admissão."""
+    first = date(year, month, 1)
+    if user.hire_date:
+        if user.hire_date > date(year, month, monthrange(year, month)[1]):
+            return 0
+        if user.hire_date > first:
+            first = user.hire_date
+    count = 0
+    days = monthrange(year, month)[1]
+    for day in range(1, days + 1):
+        d = date(year, month, day)
+        if d.weekday() < 5 and d >= first:
+            count += 1
+    return count
+
+
 async def _load_entries(db: AsyncSession, user_id: Optional[int], start: datetime, end: datetime) -> List[TimeEntryModel]:
     query = (
         select(TimeEntryModel)
@@ -72,10 +89,9 @@ async def hr_overview(
     approved_seconds = sum(e.duration_seconds for e in entries if e.approval_status == ApprovalStatus.APPROVED)
 
     expected_hours = 0.0
-    workdays = _workdays_in_month(today.year, today.month)
     for u in active_employees:
         hours = float(u.work_hours_per_day or 8.0)
-        expected_hours += hours * workdays
+        expected_hours += hours * _workdays_for_user(u, today.year, today.month)
 
     dept_map = {}
     for u in employees:
@@ -248,7 +264,7 @@ async def hr_point_sheet(
     rows = []
     for u in employees:
         user_entries = by_user.get(u.id, [])
-        expected = float(u.work_hours_per_day or 8.0) * workdays
+        expected = float(u.work_hours_per_day or 8.0) * _workdays_for_user(u, year, mon)
         total_seconds = sum(e.duration_seconds for e in user_entries)
 
         day_map = {}
@@ -322,6 +338,7 @@ async def hr_time_bank(
     rows = []
     for u in employees:
         user_entries = by_user.get(u.id, [])
+        workdays = _workdays_for_user(u, year, mon)
         expected = float(u.work_hours_per_day or 8.0) * workdays
         worked = sum(e.duration_seconds for e in user_entries) / 3600
         balance = worked - expected

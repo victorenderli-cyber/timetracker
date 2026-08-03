@@ -13,6 +13,7 @@ import { HrPage } from '@/pages/HrPage'
 import { ToastContainer } from '@/store/toastStore'
 import { useEffect } from 'react'
 import { Clock } from 'lucide-react'
+import { useThemeStore, applyTheme } from '@/store/themeStore'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -39,6 +40,16 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   const fetchMe = useAuthStore((s) => s.fetchMe)
   const location = useLocation()
+  const theme = useThemeStore((s) => s.theme)
+  const initTheme = useThemeStore((s) => s.init)
+
+  useEffect(() => {
+    initTheme()
+  }, [initTheme])
+
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
 
   useEffect(() => {
     fetchMe()

@@ -239,6 +239,7 @@ class TimeReport(BaseModel):
     by_user: List[dict] = []
     by_task: List[dict] = []
     daily_breakdown: List[dict] = []
+    entries: List[TimeEntryWithRelations] = []
 
 
 class ApprovalAction(BaseModel):

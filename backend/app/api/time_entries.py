@@ -444,7 +444,8 @@ async def generate_report(
     query = select(TimeEntryModel).options(
         selectinload(TimeEntryModel.user),
         selectinload(TimeEntryModel.project),
-        selectinload(TimeEntryModel.task)
+        selectinload(TimeEntryModel.task),
+        selectinload(TimeEntryModel.approver)
     ).where(TimeEntryModel.status == TimeEntryStatus.COMPLETED)
     
     if current_user.role == "employee":
@@ -508,5 +509,6 @@ async def generate_report(
         by_project=list(by_project.values()),
         by_user=list(by_user.values()),
         by_task=list(by_task.values()),
-        daily_breakdown=sorted(daily.values(), key=lambda x: x["date"])
+        daily_breakdown=sorted(daily.values(), key=lambda x: x["date"]),
+        entries=entries,
     )

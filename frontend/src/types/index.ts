@@ -128,6 +128,7 @@ export interface TimeReport {
     date: string;
     hours: number;
   }>;
+  entries: TimeEntryWithRelations[];
 }
 
 export interface ReportFilters {

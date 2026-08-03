@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, NavLink } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import {
   LayoutDashboard,
@@ -10,8 +11,14 @@ import {
   LogOut,
   Timer,
   Briefcase,
+  Sun,
+  Moon,
+  Search,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useThemeStore } from '@/store/themeStore'
+import { TimerWidget } from './TimerWidget'
+import { CommandPalette } from './CommandPalette'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -33,6 +40,20 @@ export function Layout() {
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+  const theme = useThemeStore((s) => s.theme)
+  const toggleTheme = useThemeStore((s) => s.toggle)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((o) => !o)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -40,7 +61,7 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-[#0b1120]">
       <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col sticky top-0 h-screen flex-shrink-0">
         <div className="px-6 py-6">
           <div className="flex items-center gap-3">
@@ -55,6 +76,14 @@ export function Layout() {
         </div>
 
         <div className="px-3 mb-4">
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 bg-gray-800/60 border border-gray-700 hover:border-gray-600 hover:text-gray-200 transition-colors mb-4"
+          >
+            <Search className="h-4 w-4" />
+            <span className="flex-1 text-left">Buscar...</span>
+            <kbd className="text-[10px] font-semibold px-1.5 py-0.5 bg-gray-700 rounded text-gray-300">Ctrl K</kbd>
+          </button>
           <p className="px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">Menu</p>
           <nav className="space-y-1">
             {navItems
@@ -92,7 +121,16 @@ export function Layout() {
 
         <div className="flex-1" />
 
+        <TimerWidget />
+
         <div className="p-4 border-t border-gray-800 bg-gray-900/95">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors mb-1"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+          </button>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center font-semibold text-white shadow-md">
               {user?.full_name?.charAt(0).toUpperCase()}
@@ -116,6 +154,8 @@ export function Layout() {
           <Outlet />
         </div>
       </main>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   )
 }
