@@ -21,9 +21,26 @@ STATIC_CANDIDATES = [
 STATIC_DIR = next((p for p in STATIC_CANDIDATES if p and (p / "index.html").is_file()), None)
 
 
+import asyncio
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    # O Postgres free do Render "dorme" quando fica ocioso e leva ~1min para
+    # acordar. Retentamos a inicialização para não derrubar o container.
+    last_exc = None
+    for attempt in range(1, 7):
+        try:
+            await init_db()
+            last_exc = None
+            break
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            logger.warning(f"init_db tentativa {attempt} falhou: {exc}")
+            await asyncio.sleep(10)
+    if last_exc is not None:
+        logger.warning(f"init_db não concluído após retries: {last_exc}")
+
     try:
         from seed import seed as run_seed
         await run_seed()
