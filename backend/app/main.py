@@ -1,12 +1,24 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import logging
+import os
+from pathlib import Path
 from app.core.config import settings
 from app.db.session import init_db
 from app.api import auth, users, projects, tasks, time_entries, hr
 
 logger = logging.getLogger("uvicorn.error")
+
+# Diretórios onde a interface (build do frontend) pode estar, em ordem de prioridade.
+STATIC_CANDIDATES = [
+    Path(os.environ.get("STATIC_DIR", "")).resolve() if os.environ.get("STATIC_DIR") else None,
+    Path(__file__).resolve().parent.parent.parent / "static",  # <repo>/static
+    Path(__file__).resolve().parent.parent.parent / "frontend" / "dist",
+]
+STATIC_DIR = next((p for p in STATIC_CANDIDATES if p and (p / "index.html").is_file()), None)
 
 
 @asynccontextmanager
@@ -51,4 +63,21 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "static": bool(STATIC_DIR)}
+
+
+# Serve o build do frontend (SPA) se ele existir no container.
+# Assim API + interface compartilham o mesmo domínio (sem CORS no deploy).
+if STATIC_DIR:
+    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/{full_path:path}")
+    async def spa(full_path: str):
+        from fastapi import HTTPException
+        if full_path.startswith(settings.API_V1_STR):
+            raise HTTPException(status_code=404, detail="Not Found")
+        candidate = STATIC_DIR / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(STATIC_DIR / "index.html")

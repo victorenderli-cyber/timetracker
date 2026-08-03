@@ -2,14 +2,13 @@
 #
 # ID do blueprint/deploy (Render): d29e88824b410ce44f2610ea6eec30bd
 #
-# Como usar:
-#   1) Crie um repositório no GitHub e faça push deste projeto.
-#   2) Em https://render.com → New → Blueprint → selecione o repositório.
-#   3) O Render cria o PostgreSQL, o serviço da API e o serviço do frontend.
+# Arquitetura: UM único serviço web. O backend FastAPI serve a API (/api/v1)
+# e também a interface compilada (SPA) — tudo no mesmo domínio, sem CORS.
 #
-# Resultado:
-#   - API:   https://timetracker-api.onrender.com/api/v1
-#   - Front: https://timetracker-frontend.onrender.com  (nginx faz proxy de /api → API)
+# Como usar:
+#   1) Push deste repositório para o GitHub.
+#   2) Em https://render.com → New → Blueprint → selecione o repositório.
+#   3) O Render cria o PostgreSQL e o serviço web, e expõe a URL pública.
 
 databases:
   - name: timetracker-db
@@ -20,10 +19,10 @@ databases:
 
 services:
   - type: web
-    name: timetracker-api
+    name: timetracker
     runtime: docker
     plan: free
-    rootDir: backend
+    rootDir: .
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
@@ -34,17 +33,4 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: '["https://timetracker-frontend.onrender.com"]'
-
-  - type: web
-    name: timetracker-frontend
-    runtime: docker
-    plan: free
-    rootDir: frontend
-    dockerfilePath: Dockerfile
-    dockerContext: .
-    envVars:
-      - key: VITE_API_URL
-        value: /api/v1
-      - key: BACKEND_URL
-        value: https://timetracker-api.onrender.com
+        value: '[]'
