@@ -75,6 +75,8 @@ app.include_router(hr.router, prefix=f"{settings.API_V1_STR}/hr", tags=["hr"])
 
 @app.get("/")
 async def root():
+    if STATIC_DIR:
+        return FileResponse(STATIC_DIR / "index.html")
     return {"message": "TimeTracker API", "version": "1.0.0"}
 
 
