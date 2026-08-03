@@ -1,5 +1,7 @@
 # Render "Blueprint" (Infrastructure as Code) para o TimeTracker
 #
+# ID do blueprint/deploy (Render): d29e88824b410ce44f2610ea6eec30bd
+#
 # Como usar:
 #   1) Crie um repositório no GitHub e faça push deste projeto.
 #   2) Em https://render.com → New → Blueprint → selecione o repositório.
