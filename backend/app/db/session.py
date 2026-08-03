@@ -64,13 +64,12 @@ async def _run_migrations():
 
 async def init_db():
     if not settings.DATABASE_URL.startswith("sqlite"):
-        # Recria os enums com rótulos do VALOR (minúsculo, ex 'pending') em vez
-        # do nome ('PENDING'), compatível com as inserções do seed/app. O banco
-        # de produção é sem dados relevantes, então o recreate é seguro.
+        # banco de produção é de demonstração (sem dados relevantes); reconstrói
+        # o schema pra refletir o modelo atual (colunas + enums como VARCHAR).
         async with engine.begin() as conn:
-            await conn.execute(text("DROP TYPE IF EXISTS userrole CASCADE"))
-            await conn.execute(text("DROP TYPE IF EXISTS timeentrystatus CASCADE"))
-            await conn.execute(text("DROP TYPE IF EXISTS approvalstatus CASCADE"))
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
+        return
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await _run_migrations()
