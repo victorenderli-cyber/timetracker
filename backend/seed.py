@@ -8,10 +8,18 @@ from app.models import (
 from sqlalchemy import select
 
 
+async def has_data(session) -> bool:
+    result = await session.execute(select(User).limit(1))
+    return result.scalar_one_or_none() is not None
+
+
 async def seed():
     await init_db()
 
     async with async_session_maker() as session:
+        if await has_data(session):
+            print("[skip] Banco já possui dados")
+            return
         users = [
             {
                 "email": "admin@timetracker.com",

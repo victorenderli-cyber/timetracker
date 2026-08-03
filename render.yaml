@@ -1,0 +1,48 @@
+# Render "Blueprint" (Infrastructure as Code) para o TimeTracker
+#
+# Como usar:
+#   1) Crie um repositório no GitHub e faça push deste projeto.
+#   2) Em https://render.com → New → Blueprint → selecione o repositório.
+#   3) O Render cria o PostgreSQL, o serviço da API e o serviço do frontend.
+#
+# Resultado:
+#   - API:   https://timetracker-api.onrender.com/api/v1
+#   - Front: https://timetracker-frontend.onrender.com  (nginx faz proxy de /api → API)
+
+databases:
+  - name: timetracker-db
+    databaseName: timetracker
+    user: timetracker
+    plan: free
+    ipAllowList: []
+
+services:
+  - type: web
+    name: timetracker-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: timetracker-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: '["https://timetracker-frontend.onrender.com"]'
+
+  - type: web
+    name: timetracker-frontend
+    runtime: docker
+    plan: free
+    rootDir: frontend
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    envVars:
+      - key: VITE_API_URL
+        value: /api/v1
+      - key: BACKEND_URL
+        value: https://timetracker-api.onrender.com

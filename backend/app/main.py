@@ -1,14 +1,23 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import logging
 from app.core.config import settings
 from app.db.session import init_db
 from app.api import auth, users, projects, tasks, time_entries, hr
+
+logger = logging.getLogger("uvicorn.error")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    try:
+        from seed import seed as run_seed
+        await run_seed()
+        logger.info("Seed verificado no startup")
+    except Exception as exc:
+        logger.warning(f"Seed no startup ignorada: {exc}")
     yield
 
 

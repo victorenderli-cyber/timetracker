@@ -41,19 +41,26 @@ _MIGRATIONS = [
 
 
 async def _run_migrations():
-    if not settings.DATABASE_URL.startswith("sqlite"):
-        return
-    async with engine.connect() as conn:
-        for table, columns in _MIGRATIONS:
-            existing = set()
-            res = await conn.execute(text(f"SELECT name FROM pragma_table_info('{table}')"))
-            for row in res:
-                existing.add(str(row[0]))
-            for col, coltype in columns:
-                if col not in existing:
-                    await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}"))
-    async with engine.connect() as conn:
-        await conn.execute(text("UPDATE time_entries SET approval_status = 'PENDING' WHERE approval_status = 'pending'"))
+    is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+    if is_sqlite:
+        async with engine.connect() as conn:
+            for table, columns in _MIGRATIONS:
+                existing = set()
+                res = await conn.execute(text(f"SELECT name FROM pragma_table_info('{table}')"))
+                for row in res:
+                    existing.add(str(row[0]))
+                for col, coltype in columns:
+                    if col not in existing:
+                        await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}"))
+            await conn.execute(text("UPDATE time_entries SET approval_status = 'PENDING' WHERE approval_status = 'pending'"))
+    else:
+        async with engine.connect() as conn:
+            for table, columns in _MIGRATIONS:
+                for col, coltype in columns:
+                    await conn.execute(text(
+                        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {coltype}"
+                    ))
+            await conn.execute(text("UPDATE time_entries SET approval_status = 'PENDING' WHERE approval_status = 'pending'"))
 
 
 async def init_db():

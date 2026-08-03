@@ -1,5 +1,10 @@
 version: '3.8'
 
+# Modo PRODUÇÃO: docker compose up --build -d
+#   - Frontend: build de produção servido por nginx (http://localhost:80, proxy /api → backend)
+#   - Backend: uvicorn sem reload
+#   - Postgres + Redis
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -39,29 +44,25 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/timetracker
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: your-secret-key-change-in-production
+      CORS_ORIGINS: '["http://localhost"]'
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
-      VITE_API_URL: http://localhost:8000/api/v1
+      BACKEND_URL: http://backend:8000
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
 
 volumes:
   postgres_data:
