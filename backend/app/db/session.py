@@ -60,10 +60,17 @@ async def _run_migrations():
                     await conn.execute(text(
                         f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {coltype}"
                     ))
-            await conn.execute(text("UPDATE time_entries SET approval_status = 'PENDING' WHERE approval_status = 'pending'"))
 
 
 async def init_db():
+    if not settings.DATABASE_URL.startswith("sqlite"):
+        # Recria os enums com rótulos do VALOR (minúsculo, ex 'pending') em vez
+        # do nome ('PENDING'), compatível com as inserções do seed/app. O banco
+        # de produção é sem dados relevantes, então o recreate é seguro.
+        async with engine.begin() as conn:
+            await conn.execute(text("DROP TYPE IF EXISTS userrole CASCADE"))
+            await conn.execute(text("DROP TYPE IF EXISTS timeentrystatus CASCADE"))
+            await conn.execute(text("DROP TYPE IF EXISTS approvalstatus CASCADE"))
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await _run_migrations()

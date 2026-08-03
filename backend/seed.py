@@ -23,7 +23,7 @@ async def seed():
         users = [
             {
                 "email": "admin@timetracker.com",
-                "password": "admin123",
+                "password": "admin401835",
                 "full_name": "Administrador",
                 "role": UserRole.ADMIN,
                 "department": "Diretoria",

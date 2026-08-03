@@ -1,4 +1,8 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, Text, Boolean, Date, Time, Numeric
+
+
+def _enum_values(enum_cls):
+    return lambda e: [m.value for m in enum_cls]
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.session import Base
@@ -32,7 +36,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), default=UserRole.EMPLOYEE, nullable=False)
+    role = Column(Enum(UserRole, values_callable=_enum_values(UserRole)), default=UserRole.EMPLOYEE, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -113,9 +117,9 @@ class TimeEntry(Base):
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=True)
     duration_seconds = Column(Integer, default=0)  # Calculated field
-    status = Column(Enum(TimeEntryStatus), default=TimeEntryStatus.ACTIVE, nullable=False)
+    status = Column(Enum(TimeEntryStatus, values_callable=_enum_values(TimeEntryStatus)), default=TimeEntryStatus.ACTIVE, nullable=False)
     is_billable = Column(Boolean, default=True)
-    approval_status = Column(Enum(ApprovalStatus), default=ApprovalStatus.PENDING)
+    approval_status = Column(Enum(ApprovalStatus, values_callable=_enum_values(ApprovalStatus)), default=ApprovalStatus.PENDING)
     approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
