@@ -32,6 +32,7 @@ COPY --from=frontend /app/dist /app/static
 
 ENV STATIC_DIR=/app/static
 
+# Render injeta a variável PORT; usa-se 8000 como fallback local.
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
