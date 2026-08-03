@@ -35,7 +35,7 @@ _MIGRATIONS = [
     ("time_entries", [
         ("approval_status", "VARCHAR(15) DEFAULT 'PENDING'"),
         ("approved_by", "INTEGER"),
-        ("approved_at", "DATETIME"),
+        ("approved_at", "TIMESTAMP"),
     ]),
 ]
 
