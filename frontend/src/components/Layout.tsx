@@ -19,6 +19,7 @@ import { cn } from '@/utils/cn'
 import { useThemeStore } from '@/store/themeStore'
 import { TimerWidget } from './TimerWidget'
 import { CommandPalette } from './CommandPalette'
+import { AdSlot } from './ad/AdSlot'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -122,6 +123,10 @@ export function Layout() {
         <div className="flex-1" />
 
         <TimerWidget />
+
+        <div className="px-4 pb-2">
+          <AdSlot slotId="YYYYYYYYYYYY" format="horizontal" className="rounded-lg overflow-hidden" />
+        </div>
 
         <div className="p-4 border-t border-gray-800 bg-gray-900/95">
           <button

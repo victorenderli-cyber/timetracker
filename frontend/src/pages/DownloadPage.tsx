@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Timer, Download, Smartphone, Globe, QrCode } from 'lucide-react'
+import { AdSlot } from '@/components/ad/AdSlot'
 
 const APK_URL = 'https://github.com/victorenderli-cyber/timetracker/releases/download/v1.0.0/TimeTracker-v1.0.apk'
 const QR_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(APK_URL)
@@ -87,8 +88,12 @@ export function DownloadPage() {
           </div>
         </div>
 
-        <div className="text-center text-white/60 text-sm mt-10">
+        <div className="text-center text-white/60 text-sm mt-6">
           <Link to="/login" className="hover:underline">Já é da equipe? Entrar</Link>
+        </div>
+
+        <div className="mt-8 bg-white/90 rounded-3xl p-4 shadow-lg">
+          <AdSlot slotId="YYYYYYYYYYYY" format="horizontal" />
         </div>
       </div>
     </div>
