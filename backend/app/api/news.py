@@ -15,12 +15,44 @@ router = APIRouter()
 # pela variável de ambiente NEWS_FEEDS (formato: nome,url;nome2,url2).
 DEFAULT_FEEDS: List[Dict[str, str]] = [
     {"name": "Agência Brasil", "url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml"},
-    {"name": "Exame", "url": "https://exame.com/feed/"},
+    {"name": "Exame - Carreira", "url": "https://exame.com/feed/?post_type=post&s=carreira"},
     {"name": "Gazeta do Povo - Economia", "url": "https://www.gazetadopovo.com.br/feed/rss/economia.xml"},
 ]
 
 REQUEST_TIMEOUT = 10.0
 MAX_ITEMS = 50
+
+# Palavras-chave do tema "mercado de trabalho". Uma matéria é mantida se o
+# título ou resumo contiver ao menos uma delas (normalizada em minúsculas).
+WORK_TOPICS = [
+    "emprego", "trabalho", "empregos", "carreira", "vagas", "salário", "salarios",
+    "demissão", "demissoes", "demitir", "contratação", "contratacao", "recrutamento",
+    "rh", "empresa", "empresas", "funcionário", "funcionario", "funcionários",
+    "empresário", "empresario", "profissional", "profissionais", "mercado de trabalho",
+    "recolocação", "recolocacao", "desemprego", "piso salarial", "carteira assinada",
+    "clt", "pj", "teletrabalho", "home office", "trabalho remoto", "estágio", "estagio",
+    "estagiário", "estagiario", "jovem aprendiz", "empregabilidade", "carreiras",
+    "promoção", "promocao", "liderança", "lideranca", "competência", "competencia",
+    "habilidades", "curriculo", "currículo", "entrevista", "treinamento",
+    "salarial", "remunera", "cargo", "cargos", "colaborador", "colaboradores",
+]
+
+
+def _is_relevant(item: Dict[str, Any]) -> bool:
+    """Retorna True se a notícia trata do tema mercado de trabalho."""
+    raw = f"{item.get('title') or ''} {item.get('description') or ''}".lower()
+    if not any(tk in raw for tk in WORK_TOPICS):
+        return False
+    # Exclui temas com forte confusão de vocabulário (esporte/entretenimento),
+    # mesmo quando contêm uma palavra da lista (ex.: "contratação" no futebol).
+    off_topic = [
+        "futebol", "brasileirão", "champions", "atlético", "corinthians", "flamengo",
+        "palmeiras", "são paulo fc", "gol", "gols", "partida", "rodada",
+        "streaming", "assistir", "série", "temporada", "episódio", "episodio",
+        "filme", "filmes", "lançamento", "lançamentos", "ingressos", "show",
+        "show d", "fifa", "copinha", "rock in rio", "bosshardt",
+    ]
+    return not any(tk in raw for tk in off_topic)
 
 
 def _parse_source_feeds() -> List[Dict[str, str]]:
@@ -137,6 +169,9 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
         results = await asyncio.gather(*[_fetch_feed(client, feed) for feed in feeds])
         for items in results:
             all_items.extend(items)
+
+    # Mantém apenas notícias relevantes ao tema mercado de trabalho.
+    all_items = [item for item in all_items if _is_relevant(item)]
 
     # Ordena por data de publicação (mais recentes primeiro); itens sem data vão para o fim.
     def _sort_key(item: Dict[str, Any]) -> str:
