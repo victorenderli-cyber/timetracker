@@ -17,6 +17,7 @@ DEFAULT_FEEDS: List[Dict[str, str]] = [
     {"name": "Agência Brasil", "url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml"},
     {"name": "Exame - Carreira", "url": "https://exame.com/feed/?post_type=post&s=carreira"},
     {"name": "Gazeta do Povo - Economia", "url": "https://www.gazetadopovo.com.br/feed/rss/economia.xml"},
+    {"name": "G1 - Concursos e Emprego", "url": "https://g1.globo.com/rss/g1/concursos-e-emprego/"},
 ]
 
 REQUEST_TIMEOUT = 10.0
