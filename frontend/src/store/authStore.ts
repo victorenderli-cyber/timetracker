@@ -14,7 +14,7 @@ interface AuthStore {
   fetchMe: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>((set, get) => ({
   user: null,
   token: getToken(),
   isAuthenticated: false,
@@ -29,11 +29,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   register: async (userData) => {
-    const data = await authApi.register(userData)
-    setToken(data.access_token)
-    set({ token: data.access_token, isAuthenticated: true })
-    const me = await authApi.me()
-    set({ user: me })
+    await authApi.register(userData)
+    await get().login(userData.email, userData.password)
   },
 
   logout: () => {
