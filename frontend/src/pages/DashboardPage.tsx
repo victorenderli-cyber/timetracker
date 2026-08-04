@@ -142,7 +142,7 @@ export function DashboardPage() {
               .replace(/^./, (c) => c.toUpperCase())}
           </p>
         </div>
-        <Button onClick={() => navigate('/projects')}>
+        <Button onClick={() => navigate('/app/projects')}>
           <Plus className="h-4 w-4 mr-2" /> Novo projeto
         </Button>
       </div>

@@ -29,7 +29,7 @@ export function RegisterPage() {
     setLoading(true)
     try {
       await register({ email, full_name: fullName, password, role })
-      navigate('/')
+      navigate('/app')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erro ao criar conta')
     } finally {

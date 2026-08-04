@@ -89,14 +89,14 @@ export function ProjectsPage() {
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: project.color }} />
                 <button
-                  onClick={() => navigate(`/projects/${project.id}`)}
+                  onClick={() => navigate(`/app/projects/${project.id}`)}
                   className="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
                 >
                   {project.name}
                 </button>
               </div>
               <div className="flex gap-1">
-                <button onClick={() => navigate(`/projects/${project.id}`)} className="p-1.5 rounded-lg hover:bg-gray-100" title="Ver detalhes">
+                <button onClick={() => navigate(`/app/projects/${project.id}`)} className="p-1.5 rounded-lg hover:bg-gray-100" title="Ver detalhes">
                   <ExternalLink className="h-4 w-4 text-gray-500" />
                 </button>
                 <button onClick={() => openEdit(project)} className="p-1.5 rounded-lg hover:bg-gray-100">

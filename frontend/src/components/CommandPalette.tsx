@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+﻿import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, FolderKanban, CheckSquare, Clock, BarChart3, Briefcase,
@@ -35,34 +35,34 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   const buildItems = useCallback(async () => {
     const navPages: CommandItem[] = [
-      { group: 'Navegação', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, onSelect: () => navigate('/') },
-      { group: 'Navegação', label: 'Projetos', icon: <FolderKanban className="h-4 w-4" />, onSelect: () => navigate('/projects') },
-      { group: 'Navegação', label: 'Tarefas', icon: <CheckSquare className="h-4 w-4" />, onSelect: () => navigate('/tasks') },
-      { group: 'Navegação', label: 'Timesheet', icon: <Clock className="h-4 w-4" />, onSelect: () => navigate('/timesheet') },
-      { group: 'Navegação', label: 'Relatórios', icon: <BarChart3 className="h-4 w-4" />, onSelect: () => navigate('/reports') },
-      ...(isMgmt ? [{ group: 'Navegação', label: 'RH / DP', icon: <Briefcase className="h-4 w-4" />, onSelect: () => navigate('/hr') }] : []),
-      ...(user?.role === 'admin' ? [{ group: 'Navegação', label: 'Usuários', icon: <Users className="h-4 w-4" />, onSelect: () => navigate('/users') }] : []),
+      { group: 'NavegaÃ§Ã£o', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, onSelect: () => navigate('/app') },
+      { group: 'NavegaÃ§Ã£o', label: 'Projetos', icon: <FolderKanban className="h-4 w-4" />, onSelect: () => navigate('/app/projects') },
+      { group: 'NavegaÃ§Ã£o', label: 'Tarefas', icon: <CheckSquare className="h-4 w-4" />, onSelect: () => navigate('/app/tasks') },
+      { group: 'NavegaÃ§Ã£o', label: 'Timesheet', icon: <Clock className="h-4 w-4" />, onSelect: () => navigate('/app/timesheet') },
+      { group: 'NavegaÃ§Ã£o', label: 'RelatÃ³rios', icon: <BarChart3 className="h-4 w-4" />, onSelect: () => navigate('/app/reports') },
+      ...(isMgmt ? [{ group: 'NavegaÃ§Ã£o', label: 'RH / DP', icon: <Briefcase className="h-4 w-4" />, onSelect: () => navigate('/app/hr') }] : []),
+      ...(user?.role === 'admin' ? [{ group: 'NavegaÃ§Ã£o', label: 'UsuÃ¡rios', icon: <Users className="h-4 w-4" />, onSelect: () => navigate('/app/users') }] : []),
     ]
 
     const actions: CommandItem[] = [
       {
-        group: 'Ações', label: 'Iniciar timer', icon: <Play className="h-4 w-4" />,
+        group: 'AÃ§Ãµes', label: 'Iniciar timer', icon: <Play className="h-4 w-4" />,
         onSelect: async () => {
           try { await timeEntriesApi.start({}); toast('Timer iniciado!'); close() }
           catch (err: any) { toastError(err.response?.data?.detail || 'Erro ao iniciar') }
         },
       },
       {
-        group: 'Ações', label: 'Registrar tempo manualmente', icon: <Plus className="h-4 w-4" />,
-        onSelect: () => { navigate('/timesheet'); toastInfo('Abra o registro manual no timesheet') },
+        group: 'AÃ§Ãµes', label: 'Registrar tempo manualmente', icon: <Plus className="h-4 w-4" />,
+        onSelect: () => { navigate('/app/timesheet'); toastInfo('Abra o registro manual no timesheet') },
       },
       {
-        group: 'Ações', label: 'Criar projeto', icon: <FolderKanban className="h-4 w-4" />,
-        onSelect: () => navigate('/projects'),
+        group: 'AÃ§Ãµes', label: 'Criar projeto', icon: <FolderKanban className="h-4 w-4" />,
+        onSelect: () => navigate('/app/projects'),
       },
       ...(isMgmt ? [{
-        group: 'Ações', label: 'Criar usuário', icon: <UserPlus className="h-4 w-4" />,
-        onSelect: () => navigate('/users'),
+        group: 'AÃ§Ãµes', label: 'Criar usuÃ¡rio', icon: <UserPlus className="h-4 w-4" />,
+        onSelect: () => navigate('/app/users'),
       }] : []),
     ]
 
@@ -85,7 +85,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       taskItems = (taskData as any[]).slice(0, 6).map((t) => ({
         group: 'Tarefas', label: t.title, hint: t.project?.name,
         icon: <CheckSquare className="h-4 w-4" />,
-        onSelect: () => t.project_id ? navigate(`/projects/${t.project_id}`) : navigate('/tasks'),
+        onSelect: () => t.project_id ? navigate(`/projects/${t.project_id}`) : navigate('/app/tasks'),
       }))
     } catch { /* ignore */ }
 
@@ -140,7 +140,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
               className="flex-1 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400"
-              placeholder="Buscar páginas, projetos, tarefas ou ações..."
+              placeholder="Buscar pÃ¡ginas, projetos, tarefas ou aÃ§Ãµes..."
             />
             <kbd className="hidden sm:flex items-center gap-0.5 px-2 py-1 text-[10px] font-semibold text-gray-400 bg-gray-100 dark:bg-gray-700 rounded">
               ESC
@@ -180,7 +180,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           </div>
 
           <div className="px-4 py-2.5 border-t border-gray-100 dark:border-gray-700 flex items-center gap-4 text-xs text-gray-400">
-            <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">↑↓</kbd> navegar</span>
+            <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">â†‘â†“</kbd> navegar</span>
             <span className="flex items-center gap-1.5"><CornerDownLeft className="h-3 w-3" /> selecionar</span>
             <span className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">Ctrl K</kbd> abrir/fechar</span>
           </div>

@@ -18,7 +18,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      navigate('/')
+      navigate('/app')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erro ao fazer login')
     } finally {

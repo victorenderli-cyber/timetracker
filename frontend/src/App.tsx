@@ -12,6 +12,8 @@ import { TimesheetPage } from '@/pages/TimesheetPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { UsersPage } from '@/pages/UsersPage'
 import { HrPage } from '@/pages/HrPage'
+import { NewsHomePage } from '@/pages/news/NewsHomePage'
+import { PrivacyPage } from '@/pages/news/PrivacyPage'
 import { ToastContainer } from '@/store/toastStore'
 import { useEffect } from 'react'
 import { Clock } from 'lucide-react'
@@ -61,9 +63,14 @@ export default function App() {
     <>
       <ToastContainer />
       <Routes>
+        {/* Portal público de notícias */}
+        <Route path="/" element={<NewsHomePage />} />
+        <Route path="/privacidade" element={<PrivacyPage />} />
+
+        {/* TimeTracker: aplicativo (web) e app Android */}
+        <Route path="/download" element={<DownloadPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/download" element={<DownloadPage />} />
         <Route
           element={
             <PrivateRoute>
@@ -71,14 +78,14 @@ export default function App() {
             </PrivateRoute>
           }
         >
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/timesheet" element={<TimesheetPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/hr" element={<HrPage />} />
-          <Route path="/users" element={<UsersPage />} />
+          <Route path="/app" element={<DashboardPage />} />
+          <Route path="/app/projects" element={<ProjectsPage />} />
+          <Route path="/app/projects/:projectId" element={<ProjectDetailPage />} />
+          <Route path="/app/tasks" element={<TasksPage />} />
+          <Route path="/app/timesheet" element={<TimesheetPage />} />
+          <Route path="/app/reports" element={<ReportsPage />} />
+          <Route path="/app/hr" element={<HrPage />} />
+          <Route path="/app/users" element={<UsersPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -101,7 +101,7 @@ export function ProjectDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/projects')} className="p-2 rounded-lg hover:bg-gray-200">
+          <button onClick={() => navigate('/app/projects')} className="p-2 rounded-lg hover:bg-gray-200">
             <ArrowLeft className="h-5 w-5 text-gray-600" />
           </button>
           <div className="flex items-center gap-3">

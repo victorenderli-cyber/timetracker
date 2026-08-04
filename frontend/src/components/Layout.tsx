@@ -22,13 +22,13 @@ import { CommandPalette } from './CommandPalette'
 import { AdSlot } from './ad/AdSlot'
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/projects', label: 'Projetos', icon: FolderKanban },
-  { to: '/tasks', label: 'Tarefas', icon: CheckSquare },
-  { to: '/timesheet', label: 'Timesheet', icon: Clock },
-  { to: '/reports', label: 'Relatórios', icon: BarChart3 },
-  { to: '/hr', label: 'RH / DP', icon: Briefcase, managerOnly: true },
-  { to: '/users', label: 'Usuários', icon: Users, adminOnly: true },
+  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/app/projects', label: 'Projetos', icon: FolderKanban },
+  { to: '/app/tasks', label: 'Tarefas', icon: CheckSquare },
+  { to: '/app/timesheet', label: 'Timesheet', icon: Clock },
+  { to: '/app/reports', label: 'Relatórios', icon: BarChart3 },
+  { to: '/app/hr', label: 'RH / DP', icon: Briefcase, managerOnly: true },
+  { to: '/app/users', label: 'Usuários', icon: Users, adminOnly: true },
 ]
 
 const roleLabels: Record<string, string> = {
