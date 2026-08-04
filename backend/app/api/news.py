@@ -46,11 +46,23 @@ def _is_relevant(item: Dict[str, Any]) -> bool:
     # Exclui temas com forte confusão de vocabulário (esporte/entretenimento),
     # mesmo quando contêm uma palavra da lista (ex.: "contratação" no futebol).
     off_topic = [
+        # Esporte / entretenimento
         "futebol", "brasileirão", "champions", "atlético", "corinthians", "flamengo",
-        "palmeiras", "são paulo fc", "gol", "gols", "partida", "rodada",
+        "palmeiras", "gol", "gols", "partida", "rodada",
         "streaming", "assistir", "série", "temporada", "episódio", "episodio",
         "filme", "filmes", "lançamento", "lançamentos", "ingressos", "show",
-        "show d", "fifa", "copinha", "rock in rio", "bosshardt",
+        "show d", "fifa", "copinha", "rock in rio", "bosshardt", "puyol", "barcelona",
+        "ex-capitão", "ex-capitão do barcelona",
+        # Política / justiça / segurança
+        "magistrado", "magistrada", "desembargador", "senador", "senadora", "deputado",
+        "eleitoral", "atentado", "atentados", "polícia", "policial", "suspeit",
+        "criminoso", "gilmar", "wewerton", "fachin", "stf", "mpf",
+        # Migração / imigração (geralmente não é emprego local)
+        "imigrante", "imigração", "imigra", "migrante", "refugiado",
+        # Saúde / apostas
+        "saúde mental", "sus ", "teleatendimento", "vício", "bets", "aposta",
+        # Finanças pessoais / investimento
+        "ações da", "ambev", "poupança",
     ]
     return not any(tk in raw for tk in off_topic)
 
