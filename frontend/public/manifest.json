@@ -1,8 +1,9 @@
 {
-  "name": "TimeTracker",
-  "short_name": "TimeTracker",
-  "description": "Sistema de monitoramento de tempo e funcionários",
+  "name": "Carreira & Trabalho",
+  "short_name": "Carreira",
+  "description": "Portal de notícias do mercado de trabalho + monitoramento de horas (TimeTracker)",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f9fafb",
   "theme_color": "#2563eb",

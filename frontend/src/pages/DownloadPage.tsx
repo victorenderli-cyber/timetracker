@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
-import { Timer, Download, Smartphone, Globe, QrCode } from 'lucide-react'
+import { Timer, Download, Smartphone, Globe, QrCode, MonitorDown } from 'lucide-react'
 import { AdSlot } from '@/components/ad/AdSlot'
 
 const APK_URL = 'https://github.com/victorenderli-cyber/timetracker/releases/download/v1.0.0/TimeTracker-v1.0.apk'
@@ -8,6 +9,22 @@ const QR_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' 
 
 export function DownloadPage() {
   const navigate = useNavigate()
+  const [installEvt, setInstallEvt] = useState<any>(null)
+
+  useState(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setInstallEvt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  })
+
+  const handlePwaInstall = () => {
+    if (installEvt) {
+      installEvt.prompt()
+    }
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
@@ -69,9 +86,15 @@ export function DownloadPage() {
               Não quer instalar nada? Acesse direto pelo navegador do computador ou celular.
             </p>
             <div className="space-y-3">
-              <Button className="w-full !py-3" onClick={() => navigate('/')}>
-                Criar conta
-              </Button>
+              {installEvt ? (
+                <Button className="w-full !py-3" onClick={handlePwaInstall}>
+                  <MonitorDown className="h-4 w-4 mr-2" /> Instalar como app
+                </Button>
+              ) : (
+                <Button className="w-full !py-3" onClick={() => navigate('/')}>
+                  Criar conta
+                </Button>
+              )}
               <Button variant="secondary" className="w-full !py-3" onClick={() => navigate('/')}>
                 Já tenho conta — Entrar
               </Button>
