@@ -29,3 +29,7 @@ backend/alembic/versions/*.pyc
 *.db
 *.sqlite
 *.sqlite3
+
+# Entrega mobile (APK/AAB/keystore local)
+entrega-mobile/
+android-signing/
