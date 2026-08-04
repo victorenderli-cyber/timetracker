@@ -9,7 +9,7 @@ interface AuthStore {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (userData: { email: string; full_name: string; password: string }) => Promise<void>
+  register: (userData: { email: string; full_name: string; password: string; role?: 'manager' | 'employee' }) => Promise<void>
   logout: () => void
   fetchMe: () => Promise<void>
 }

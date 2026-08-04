@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/Button'
-import { Timer, Mail, Lock, User } from 'lucide-react'
+import { Timer, Mail, Lock, User, Briefcase } from 'lucide-react'
 
 export function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [role, setRole] = useState<'manager' | 'employee'>('employee')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const register = useAuthStore((s) => s.register)
@@ -21,13 +22,13 @@ export function RegisterPage() {
       setError('As senhas não coincidem')
       return
     }
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres')
+    if (password.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres')
       return
     }
     setLoading(true)
     try {
-      await register({ email, full_name: fullName, password })
+      await register({ email, full_name: fullName, password, role })
       navigate('/')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erro ao criar conta')
@@ -99,7 +100,7 @@ export function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input !pl-10"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                   required
                 />
               </div>
@@ -116,6 +117,35 @@ export function RegisterPage() {
                   placeholder="Repita a senha"
                   required
                 />
+              </div>
+            </div>
+            <div>
+              <label className="label text-gray-700">Cargo</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole('employee')}
+                  className={`flex flex-col items-center gap-1 border-2 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                    role === 'employee'
+                      ? 'border-primary-600 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                  Funcionário
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('manager')}
+                  className={`flex flex-col items-center gap-1 border-2 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                    role === 'manager'
+                      ? 'border-primary-600 bg-primary-50 text-primary-700'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  <Briefcase className="h-5 w-5" />
+                  Gerente
+                </button>
               </div>
             </div>
             <Button type="submit" className="w-full !py-2.5" loading={loading}>
