@@ -17,7 +17,6 @@ DEFAULT_FEEDS: List[Dict[str, str]] = [
     {"name": "Agência Brasil", "url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml"},
     {"name": "Exame", "url": "https://exame.com/feed/"},
     {"name": "Gazeta do Povo - Economia", "url": "https://www.gazetadopovo.com.br/feed/rss/economia.xml"},
-    {"name": "Gazeta do Povo - Últimas", "url": "https://www.gazetadopovo.com.br/feed/rss/ultimas-noticias.xml"},
 ]
 
 REQUEST_TIMEOUT = 10.0
@@ -116,7 +115,13 @@ async def _fetch_feed(client: httpx.AsyncClient, feed: Dict[str, str]) -> List[D
     try:
         resp = await client.get(feed["url"], timeout=REQUEST_TIMEOUT, follow_redirects=True)
         resp.raise_for_status()
-        return _parse_feed_items(resp.text, feed["name"])
+        # Garante UTF-8, respeitando o charset declarado no XML quando presente.
+        encoding = resp.charset_encoding or resp.encoding or "utf-8"
+        try:
+            xml_text = resp.content.decode(encoding, errors="replace")
+        except Exception:
+            xml_text = resp.text
+        return _parse_feed_items(xml_text, feed["name"])
     except Exception as exc:  # noqa: BLE001
         logger.warning(f"Feed falhou {feed.get('name')}: {exc}")
         return []
