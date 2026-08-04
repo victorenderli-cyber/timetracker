@@ -288,6 +288,33 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
         return item["published_at"] or ""
 
     all_items.sort(key=_sort_key, reverse=True)
-    all_items = all_items[: max(1, min(limit, MAX_ITEMS))]
 
-    return {"feeds": feeds, "count": len(all_items), "items": all_items}
+    # Diversifica as fontes: intercala (round-robin) para o topo mostrar
+    # variedade, e limita a quantidade por fonte para nenhuma dominar a lista.
+    by_source: Dict[str, List[Dict[str, Any]]] = {}
+    for item in all_items:
+        by_source.setdefault(item.get("source", "?"), []).append(item)
+    sources = list(by_source.keys())
+    cap = max(1, min(limit, MAX_ITEMS))
+    max_per_source = max(1, int(round(cap / max(1, len(sources)))))
+
+    diversified: List[Dict[str, Any]] = []
+    counts: Dict[str, int] = {}
+    idx = 0
+    while len(diversified) < cap:
+        took = 0
+        for src in sources:
+            bucket = by_source.get(src, [])
+            if counts.get(src, 0) >= max_per_source:
+                continue
+            if idx < len(bucket):
+                diversified.append(bucket[idx])
+                counts[src] = counts.get(src, 0) + 1
+                took += 1
+                if len(diversified) >= cap:
+                    break
+        if took == 0:
+            break
+        idx += 1
+
+    return {"feeds": feeds, "count": len(diversified), "items": diversified}
