@@ -70,3 +70,28 @@ gradlew.bat assembleRelease bundleRelease
 | `AndroidManifest.xml` | `APPLICATION_ID` | `ca-app-pub-...~...` |
 | `MainActivity.java` | `AD_UNIT_ID_BANNER` / `AD_UNIT_ID_INTERSTITIAL` | `ca-app-pub-.../...` |
 | `MainActivity.java` | `AD_MOB_ENABLED` | `true` |
+
+---
+
+## 3) Dicas para aprovar o AdSense
+
+O site foi transformado em um **portal de notícias sobre mercado de trabalho**
+(antes era só a tela do TimeTracker). Mudanças relevantes:
+
+- **Home pública** (`/`) exibe notícias agregadas por RSS de fontes reais
+  (Agência Brasil, Exame, Gazeta do Povo - Economia).
+- **Página de Política de Privacidade** (`/privacidade`) criada.
+- Espaços de anúncio já posicionados na home e no rodapé.
+
+**Fontes RSS** (`backend/app/api/news.py`):
+- `Agência Brasil` → https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml
+- `Exame` → https://exame.com/feed/
+- `Gazeta do Povo - Economia` → https://www.gazetadopovo.com.br/feed/rss/economia.xml
+
+**Adicionar/remover fontes sem código:** defina a variável de ambiente
+`NEWS_FEEDS` no Render no formato `Nome,url;Nome2,url2`. Se vazia, usa as padrão.
+
+**Atenção:** o AdSense aprova melhor sites com **conteúdo próprio e tráfego**.
+O portal ainda depende de RSS de terceiros e tem pouca visitação. Considere:
+- Publicar matérias próprias e guias (não só agregação) para aumentar chances.
+- Coletar visitas antes de solicitar a avaliação.
