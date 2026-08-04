@@ -14,10 +14,10 @@ router = APIRouter()
 # Fontes RSS sobre mercado de trabalho. Podem ser substituídas/adicionadas
 # pela variável de ambiente NEWS_FEEDS (formato: nome,url;nome2,url2).
 DEFAULT_FEEDS: List[Dict[str, str]] = [
-    {"name": "G1 Economia", "url": "https://g1.globo.com/rss/economia"},
-    {"name": "Exame VOCÊ S/A", "url": "https://exame.com/rss/marketing/?mode=default"},
-    {"name": "UOL Empregos", "url": "https://feeds.folha.uol.com.br/emprego/rss091.xml"},
-    {"name": "O Globo Economia", "url": "https://oglobo.globo.com/rss/feed/og-globoeconomia.xml"},
+    {"name": "Agência Brasil", "url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml"},
+    {"name": "Exame", "url": "https://exame.com/feed/"},
+    {"name": "Gazeta do Povo - Economia", "url": "https://www.gazetadopovo.com.br/feed/rss/economia.xml"},
+    {"name": "Gazeta do Povo - Últimas", "url": "https://www.gazetadopovo.com.br/feed/rss/ultimas-noticias.xml"},
 ]
 
 REQUEST_TIMEOUT = 10.0
