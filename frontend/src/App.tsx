@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Layout } from '@/components/Layout'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
+import { DownloadPage } from '@/pages/DownloadPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ProjectsPage } from '@/pages/ProjectsPage'
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage'
@@ -62,6 +63,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/download" element={<DownloadPage />} />
         <Route
           element={
             <PrivateRoute>
