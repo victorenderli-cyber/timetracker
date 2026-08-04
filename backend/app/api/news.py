@@ -60,11 +60,15 @@ def _is_relevant(item: Dict[str, Any]) -> bool:
         "eleitoral", "atentado", "atentados", "polícia", "policial", "suspeit",
         "criminoso", "gilmar", "wewerton", "fachin", "stf", "mpf",
         # Migração / imigração (geralmente não é emprego local)
-        "imigrante", "imigração", "imigra", "migrante", "refugiado",
+        "imigrante", "imigração", "imigra", "imigrante", "refugiado",
         # Saúde / apostas
         "saúde mental", "sus ", "teleatendimento", "vício", "bets", "aposta",
+        # Clima / ventania / eventos gerais fora do tema
+        "ventania", "vento forte", "tempestade", "chuva forte", "pronatec",
         # Finanças pessoais / investimento
         "ações da", "ambev", "poupança",
+        # Diplomacia / política externa
+        "putin", "lula conversa", "geopolítica", "geopolitica",
     ]
     return not any(tk in raw for tk in off_topic)
 
