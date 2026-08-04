@@ -69,6 +69,48 @@ def _is_relevant(item: Dict[str, Any]) -> bool:
     return not any(tk in raw for tk in off_topic)
 
 
+# Categorias exibidas no portal. A primeira palavra da lista que aparecer no
+# título/resumo define a categoria; senão, usa a default.
+CATEGORIES: List[Dict[str, List[str]]] = [
+    {"name": "Concursos", "keywords": [
+        "concurso", "concursos", "edital", "prova", "seletivo", "inscrições", "inscricoes",
+        "resultado do concurso", "caderno de provas",
+    ]},
+    {"name": "Vagas", "keywords": [
+        "vagas", "vaga", "emprego", "empregos", "oportunidade", "oportunidades",
+        "processo seletivo", "seleção", "selecao", "recolocação", "recolocacao",
+        "primeiro emprego", "trainee", "estágio", "estagio", "estagiário", "estagiario",
+        "jovem aprendiz", "admissão", "admissao",
+    ]},
+    {"name": "Salários", "keywords": [
+        "salário", "salarios", "salarial", "remuneração", "remuneracao", "piso",
+        "aumento salarial", "reajuste", "piso salarial", "benefícios", "beneficios",
+        "vale-refeição", "13º", "folha de pagamento",
+    ]},
+    {"name": "Carreira", "keywords": [
+        "carreira", "carreiras", "profissional", "profissionais", "liderança", "lideranca",
+        "competência", "competencia", "habilidade", "habilidades", "currículo", "curriculo",
+        "entrevista", "promoção", "promocao", "desenvolvimento", "capacitação", "capacitacao",
+        "treinamento", "mentoria", "empreendedorismo", "trabalho remoto", "home office",
+        "teletrabalho", "flexível", "flexivel", "produtividade",
+    ]},
+    {"name": "Economia", "keywords": [
+        "economia", "crescimento", "pib", "inflação", "inflacao", "juros", "mercado",
+        "empresa", "empresas", "indústria", "industria", "setor", "cnpj", "receita federal",
+        "investimento", "produção", "producao", "negócios", "negocios", "finanças",
+    ]},
+]
+DEFAULT_CATEGORY = "Trabalho"
+
+
+def _category(item: Dict[str, Any]) -> str:
+    raw = f"{item.get('title') or ''} {item.get('description') or ''}".lower()
+    for cat in CATEGORIES:
+        if any(kw in raw for kw in cat["keywords"]):
+            return cat["name"]
+    return DEFAULT_CATEGORY
+
+
 def _parse_source_feeds() -> List[Dict[str, str]]:
     """Lê a lista de feeds configuráveis por ambiente."""
     import os
@@ -115,6 +157,49 @@ def _ns(tag: str, ns: Optional[str] = None) -> str:
     return tag
 
 
+def _extract_image(node: ET.Element, description: str) -> Optional[str]:
+    """Tenta obter uma URL de imagem do item RSS (diversos formatos)."""
+    import re
+
+    # Tag própria da Agência Brasil: <imagem-destaque>URL</imagem-destaque>
+    featured = node.find("imagem-destaque")
+    if featured is not None and featured.text and featured.text.strip():
+        return featured.text.strip()
+
+    # enclosure com url em atributo: <enclosure url="..." />
+    enc = node.find("enclosure")
+    if enc is not None and enc.get("url"):
+        return enc.get("url")
+    # enclosure com url em elemento filho: <enclosure><url>...</url></enclosure>
+    if enc is not None:
+        url_nested = enc.find("url") or enc.find("URL")
+        if url_nested is not None and url_nested.text:
+            return url_nested.text.strip()
+
+    mrss = "{http://search.yahoo.com/mrss/}"
+    # media:content url="..."
+    mc = node.find(f".//{mrss}content") or node.find("mediaurl")
+    if mc is not None:
+        url = mc.get("url")
+        if url:
+            return url
+        if mc.text and mc.text.strip():
+            return mc.text.strip()
+
+    # media:thumbnail url="..."
+    mt = node.find(f".//{mrss}thumbnail")
+    if mt is not None and mt.get("url"):
+        return mt.get("url")
+
+    # primeira <img> dentro do description (ignora logos .svg)
+    if description:
+        m = re.search(r'<img[^>]+src="([^"]+\.(?:jpe?g|png|webp))"', description)
+        if m:
+            return m.group(1)
+
+    return None
+
+
 def _parse_feed_items(xml_text: str, source_name: str) -> List[Dict[str, Any]]:
     """Extrai itens de um XML RSS 2.0 ou Atom, de forma leniente."""
     items: List[Dict[str, Any]] = []
@@ -145,6 +230,7 @@ def _parse_feed_items(xml_text: str, source_name: str) -> List[Dict[str, Any]]:
                        or find_text(node, "{http://www.w3.org/2005/Atom}summary"))
         pub_date = (find_text(node, "pubDate") or find_text(node, "published")
                     or find_text(node, "{http://www.w3.org/2005/Atom}published"))
+        image = _extract_image(node, description)
 
         items.append({
             "title": title or "",
@@ -152,6 +238,8 @@ def _parse_feed_items(xml_text: str, source_name: str) -> List[Dict[str, Any]]:
             "description": _clean_html(description),
             "published_at": _parse_date(pub_date),
             "source": source_name,
+            "image": image,
+            "category": DEFAULT_CATEGORY,
         })
 
     return items
@@ -186,6 +274,10 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
 
     # Mantém apenas notícias relevantes ao tema mercado de trabalho.
     all_items = [item for item in all_items if _is_relevant(item)]
+
+    # Atribui categoria por palavras-chave (para filtro no portal).
+    for item in all_items:
+        item["category"] = _category(item)
 
     # Ordena por data de publicação (mais recentes primeiro); itens sem data vão para o fim.
     def _sort_key(item: Dict[str, Any]) -> str:

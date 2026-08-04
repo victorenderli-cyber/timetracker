@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchNews, NewsItem, NewsResponse } from '@/api/news'
+import { fetchNews, NewsItem, NewsResponse, NEWS_CATEGORIES, NewsCategory } from '@/api/news'
 import { AdSlot } from '@/components/ad/AdSlot'
 import { LoginModal } from '@/components/LoginModal'
 import { useAuthStore } from '@/store/authStore'
-import { Timer, Newspaper, Briefcase, LogIn } from 'lucide-react'
+import { Timer, Newspaper, Briefcase, LogIn, Search, ExternalLink, ChevronDown, ImageOff } from 'lucide-react'
+import { cn } from '@/utils/cn'
+
+const PAGE_SIZE = 12
 
 function formatDate(iso: string | null) {
   if (!iso) return ''
@@ -13,12 +16,50 @@ function formatDate(iso: string | null) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+const categoryColors: Record<string, string> = {
+  Concursos: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  Vagas: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  'Salários': 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+  Carreira: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+  Economia: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  Trabalho: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+}
+
+function CategoryBadge({ category }: { category?: NewsCategory }) {
+  const cat = category || 'Trabalho'
+  return (
+    <span className={cn('inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full', categoryColors[cat] || categoryColors.Trabalho)}>
+      {cat}
+    </span>
+  )
+}
+
+function NewsImage({ src, title }: { src?: string | null; title: string }) {
+  const [error, setError] = useState(false)
+  if (!src || error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
+        <ImageOff className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+      </div>
+    )
+  }
+  return (
+    <img
+      src={src}
+      alt={title}
+      loading="lazy"
+      onError={() => setError(true)}
+      className="w-full h-full object-cover"
+    />
+  )
+}
+
 function RelatedSidebar({ items }: { items: NewsItem[] }) {
   return (
     <aside className="hidden lg:block w-80 flex-shrink-0">
       <div className="sticky top-6 space-y-6">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
-          <h3 className="font-semibold mb-3 text-gray-800 dark:text-white">Mais lidas</h3>
+          <h3 className="font-semibold mb-3 text-gray-800 dark:text-white">Mais recentes</h3>
           <ol className="space-y-4">
             {items.slice(0, 5).map((item, i) => (
               <li key={i}>
@@ -47,8 +88,13 @@ export function NewsHomePage() {
   const [loginOpen, setLoginOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
+  // Estado de filtro/busca
+  const [query, setQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<NewsCategory | 'Todos'>('Todos')
+  const [visible, setVisible] = useState(PAGE_SIZE)
+
   useEffect(() => {
-    fetchNews(30)
+    fetchNews(100)
       .then((res) => {
         setData(res)
         setError(null)
@@ -57,15 +103,31 @@ export function NewsHomePage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const featured = data?.items?.[0]
-  const rest = data?.items?.slice(1) ?? []
+  const filtered = useMemo(() => {
+    if (!data?.items) return []
+    const q = query.trim().toLowerCase()
+    return data.items.filter((item) => {
+      if (activeCategory !== 'Todos' && item.category !== activeCategory) return false
+      if (q && !`${item.title} ${item.description} ${item.source}`.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [data, query, activeCategory])
+
+  const featured = filtered[0]
+  const rest = filtered.slice(1)
+  const shown = rest.slice(0, visible)
+  const hasMore = visible < rest.length
+
+  const resetView = () => {
+    setVisible(PAGE_SIZE)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0b1120]">
       {/* Topo */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <div className="bg-gradient-to-br from-primary-500 to-primary-700 p-2 rounded-xl">
               <Newspaper className="h-5 w-5 text-white" />
             </div>
@@ -99,11 +161,42 @@ export function NewsHomePage() {
         </div>
       </header>
 
+      {/* Barra de busca + filtros */}
+      <div className="max-w-6xl mx-auto px-4 pt-5">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); resetView() }}
+              placeholder="Buscar notícias..."
+              className="input !pl-10 w-full"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {(['Todos', ...NEWS_CATEGORIES] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => { setActiveCategory(cat); resetView() }}
+                className={cn(
+                  'px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors border',
+                  activeCategory === cat
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-400'
+                )}
+              >
+                {cat === 'Todos' ? 'Todas' : cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <main className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
         {loading && (
-          <div className="space-y-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl h-40 animate-pulse" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl h-64 animate-pulse" />
             ))}
           </div>
         )}
@@ -114,7 +207,13 @@ export function NewsHomePage() {
           </div>
         )}
 
-        {data && !error && (
+        {!loading && !error && filtered.length === 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center text-gray-500">
+            Nenhuma notícia encontrada para essa busca.
+          </div>
+        )}
+
+        {!loading && !error && filtered.length > 0 && (
           <>
             {/* Destaque */}
             {featured && (
@@ -122,46 +221,79 @@ export function NewsHomePage() {
                 href={featured.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-3xl p-6 lg:p-10 shadow-lg hover:shadow-xl transition-shadow mb-6"
+                className="block bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow mb-7 group"
               >
-                <span className="inline-block text-[11px] font-semibold uppercase tracking-wider text-primary-300 mb-3">
-                  {featured.source}
-                </span>
-                <h1 className="text-2xl lg:text-4xl font-bold leading-tight mb-3 max-w-3xl">{featured.title}</h1>
-                {featured.description && <p className="text-gray-300 max-w-3xl line-clamp-3">{featured.description}</p>}
-                <div className="text-sm text-gray-400 mt-3">{formatDate(featured.published_at)}</div>
+                <div className="grid lg:grid-cols-2">
+                  <div className="h-56 lg:h-auto news-hero-image">
+                    <NewsImage src={featured.image} title={featured.title} />
+                  </div>
+                  <div className="p-6 lg:p-10 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CategoryBadge category={featured.category} />
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                        {featured.source}
+                      </span>
+                    </div>
+                    <h1 className="text-2xl lg:text-4xl font-bold leading-tight mb-3">{featured.title}</h1>
+                    {featured.description && <p className="text-gray-300 max-w-xl line-clamp-3">{featured.description}</p>}
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="text-sm text-gray-400">{formatDate(featured.published_at)}</div>
+                      <span className="inline-flex items-center gap-1 text-sm text-primary-300 group-hover:text-primary-200">
+                        Ler mais <ExternalLink className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </a>
             )}
 
             {/* Corpo */}
             <div className="flex gap-6">
-              <div className="flex-1 min-w-0 space-y-5">
-                {rest.map((item, i) => (
-                  <a
-                    key={i}
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center gap-2 text-[11px] text-gray-500 mb-2">
-                      <span className="inline-flex items-center gap-1 text-primary-600 font-semibold">
-                        <Briefcase className="h-3 w-3" /> {item.source}
-                      </span>
-                      <span>·</span>
-                      <span>{formatDate(item.published_at)}</span>
-                    </div>
-                    <h2 className="font-semibold text-gray-900 dark:text-white leading-snug mb-1 group-hover:text-primary-700">
-                      {item.title}
-                    </h2>
-                    {item.description && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{item.description}</p>
-                    )}
-                  </a>
-                ))}
+              <div className="flex-1 min-w-0">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {shown.map((item, i) => (
+                    <a
+                      key={i}
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex flex-col bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="h-40 news-card-image">
+                        <NewsImage src={item.image} title={item.title} />
+                      </div>
+                      <div className="flex flex-col flex-1 p-4">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <CategoryBadge category={item.category} />
+                          <span className="text-[11px] text-gray-400">{formatDate(item.published_at)}</span>
+                        </div>
+                        <h2 className="font-semibold text-gray-900 dark:text-white leading-snug mb-1 group-hover:text-primary-700 dark:group-hover:text-primary-300 line-clamp-2">
+                          {item.title}
+                        </h2>
+                        {item.description && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">{item.description}</p>
+                        )}
+                        <div className="mt-auto flex items-center gap-1 text-[11px] text-gray-400">
+                          <Briefcase className="h-3 w-3" /> {item.source}
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                      className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary-400 text-gray-700 dark:text-gray-200 text-sm font-semibold px-6 py-3 rounded-xl transition-colors"
+                    >
+                      Carregar mais <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <RelatedSidebar items={rest} />
+              <RelatedSidebar items={filtered.slice(1)} />
             </div>
           </>
         )}

@@ -1,9 +1,14 @@
+export const NEWS_CATEGORIES = ['Concursos', 'Vagas', 'Salários', 'Carreira', 'Economia', 'Trabalho'] as const
+export type NewsCategory = (typeof NEWS_CATEGORIES)[number]
+
 export interface NewsItem {
   title: string
   link: string
   description: string
   published_at: string | null
   source: string
+  image?: string | null
+  category?: NewsCategory
 }
 
 export interface NewsFeed {

@@ -98,6 +98,26 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
+.news-hero-image {
+  overflow: hidden;
+}
+.news-hero-image img {
+  transition: transform 0.6s ease;
+}
+.news-hero-image img:hover {
+  transform: scale(1.04);
+}
+
+.news-card-image {
+  overflow: hidden;
+}
+.news-card-image img {
+  transition: transform 0.5s ease;
+}
+.news-card-image img:hover {
+  transform: scale(1.06);
+}
+
 .animate-slide-up {
   animation: slideUp 0.3s ease-out;
 }
