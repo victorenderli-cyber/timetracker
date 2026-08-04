@@ -64,7 +64,7 @@ async def create_project(
     db.add(project)
     await db.flush()
     
-    owner_member = ProjectMemberModel(project_id=ProjectModel.id, user_id=current_user.id, role="owner")
+    owner_member = ProjectMemberModel(project_id=project.id, user_id=current_user.id, role="owner")
     db.add(owner_member)
     
     await db.commit()
