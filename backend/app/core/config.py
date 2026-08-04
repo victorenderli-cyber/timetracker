@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "https://localhost", "capacitor://localhost", "http://localhost"]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
