@@ -69,10 +69,10 @@ export function DownloadPage() {
               Não quer instalar nada? Acesse direto pelo navegador do computador ou celular.
             </p>
             <div className="space-y-3">
-              <Button className="w-full !py-3" onClick={() => navigate('/register')}>
+              <Button className="w-full !py-3" onClick={() => navigate('/')}>
                 Criar conta
               </Button>
-              <Button variant="secondary" className="w-full !py-3" onClick={() => navigate('/login')}>
+              <Button variant="secondary" className="w-full !py-3" onClick={() => navigate('/')}>
                 Já tenho conta — Entrar
               </Button>
             </div>
@@ -89,7 +89,7 @@ export function DownloadPage() {
         </div>
 
         <div className="text-center text-white/60 text-sm mt-6">
-          <Link to="/login" className="hover:underline">Já é da equipe? Entrar</Link>
+          <Link to="/" className="hover:underline">Já é da equipe? Entrar</Link>
         </div>
 
         <div className="mt-8 bg-white/90 rounded-3xl p-4 shadow-lg">

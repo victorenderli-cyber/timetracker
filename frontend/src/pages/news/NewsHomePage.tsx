@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchNews, NewsItem, NewsResponse } from '@/api/news'
 import { AdSlot } from '@/components/ad/AdSlot'
-import { Timer, Newspaper, Briefcase } from 'lucide-react'
+import { LoginModal } from '@/components/LoginModal'
+import { useAuthStore } from '@/store/authStore'
+import { Timer, Newspaper, Briefcase, LogIn } from 'lucide-react'
 
 function formatDate(iso: string | null) {
   if (!iso) return ''
@@ -42,6 +44,8 @@ export function NewsHomePage() {
   const [data, setData] = useState<NewsResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loginOpen, setLoginOpen] = useState(false)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   useEffect(() => {
     fetchNews(30)
@@ -75,6 +79,23 @@ export function NewsHomePage() {
             <Link to="/download" className="hover:text-primary-600">App</Link>
             <Link to="/privacidade" className="hover:text-primary-600">Privacidade</Link>
           </nav>
+          <div className="flex items-center gap-3">
+            {isAuthenticated ? (
+              <Link
+                to="/app"
+                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary-600/25"
+              >
+                <Timer className="h-4 w-4" /> Meus projetos
+              </Link>
+            ) : (
+              <button
+                onClick={() => setLoginOpen(true)}
+                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary-600/25"
+              >
+                <LogIn className="h-4 w-4" /> Entrar
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -160,6 +181,8 @@ export function NewsHomePage() {
           </p>
         </div>
       </footer>
+
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

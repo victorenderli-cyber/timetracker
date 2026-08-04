@@ -21,7 +21,8 @@ DEFAULT_FEEDS: List[Dict[str, str]] = [
 ]
 
 REQUEST_TIMEOUT = 10.0
-MAX_ITEMS = 50
+MAX_ITEMS = 100
+MAX_ITEMS_PER_FEED = 40
 
 # Palavras-chave do tema "mercado de trabalho". Uma matéria é mantida se o
 # título ou resumo contiver ao menos uma delas (normalizada em minúsculas).
