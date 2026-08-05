@@ -9,6 +9,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          forms: ['react-hook-form', 'zod', '@hookform/resolvers'],
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     proxy: {

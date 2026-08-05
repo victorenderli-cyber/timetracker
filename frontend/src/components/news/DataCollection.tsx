@@ -5,6 +5,10 @@ import { toast, toastError } from '@/store/toastStore'
 import { Mail, User, Briefcase, MapPin, X, CheckCircle2, TrendingUp } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
+// Campo honeypot: invisível para humanos, bots preenchem. A API rejeita e
+// responde sucesso falso. Manter a classe oculta via CSS (.hidden-hp).
+const HONEYPOT = 'website'
+
 const QUIZ_OPTIONS = [
   { key: 'crescimento', label: 'Quero crescer na carreira' },
   { key: 'transicao', label: 'Estou pensando em mudar de área' },
@@ -34,6 +38,7 @@ export function DataCollection() {
   // Lead
   const [lead, setLead] = useState<LeadInput>({})
   const [leadOptin, setLeadOptin] = useState(false)
+  const [hp, setHp] = useState('')
 
   // Quiz
   const [quizEmail, setQuizEmail] = useState('')
@@ -52,7 +57,7 @@ export function DataCollection() {
     if (!newsEmail.trim()) return
     setSending(true)
     try {
-      await contactsApi.submitLead({ email: newsEmail.trim(), newsletter_optin: true })
+      await contactsApi.submitLead({ email: newsEmail.trim(), newsletter_optin: true, [HONEYPOT]: hp })
       setSent(true)
       toast('Inscrição confirmada! Você receberá novidades do mercado de trabalho.')
     } catch (e: any) {
@@ -73,6 +78,7 @@ export function DataCollection() {
         ...lead,
         email: lead.email.trim(),
         newsletter_optin: leadOptin,
+        [HONEYPOT]: hp,
       })
       setSent(true)
       toast('Cadastro realizado com sucesso!')
@@ -183,6 +189,16 @@ export function DataCollection() {
                   placeholder="Seu e-mail"
                   className="input !pl-10 w-full"
                 />
+                <input
+                  type="text"
+                  value={hp}
+                  onChange={(e) => setHp(e.target.value)}
+                  className="hidden-hp"
+                  name={HONEYPOT}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                />
               </div>
               <Button onClick={submitNewsletter} loading={sending} className="sm:w-auto">
                 Assinar newsletter
@@ -238,6 +254,16 @@ export function DataCollection() {
                 />
                 Quero receber a newsletter semanal
               </label>
+              <input
+                type="text"
+                value={hp}
+                onChange={(e) => setHp(e.target.value)}
+                className="hidden-hp"
+                name={HONEYPOT}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
               <div className="sm:col-span-2">
                 <Button onClick={submitLead} loading={sending} className="w-full">
                   Enviar cadastro

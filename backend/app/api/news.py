@@ -16,13 +16,31 @@ router = APIRouter()
 DEFAULT_FEEDS: List[Dict[str, str]] = [
     {"name": "Agência Brasil", "url": "https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml"},
     {"name": "Exame - Carreira", "url": "https://exame.com/feed/?post_type=post&s=carreira"},
+    {"name": "Exame - Carreiras", "url": "https://exame.com/feed/?post_type=post&s=carreiras"},
+    {"name": "Exame - Vagas", "url": "https://exame.com/feed/?post_type=post&s=vagas"},
     {"name": "Gazeta do Povo - Economia", "url": "https://www.gazetadopovo.com.br/feed/rss/economia.xml"},
     {"name": "G1 - Concursos e Emprego", "url": "https://g1.globo.com/rss/g1/concursos-e-emprego/"},
+    {"name": "G1 - Trabalho e Carreira", "url": "https://g1.globo.com/rss/g1/trabalho-e-carreira/"},
 ]
 
 REQUEST_TIMEOUT = 10.0
 MAX_ITEMS = 100
 MAX_ITEMS_PER_FEED = 40
+
+# Cache em memória do agregado: evita refazer todas as requisições RSS a cada
+# acesso ao portal (que podem ser centenas). Cada processo mantém seu cache.
+CACHE_TTL_SECONDS = 300  # 5 minutos
+_cache: Optional[Dict[str, Any]] = None
+_cache_at: Optional[float] = None
+
+# Agrupa variações de nome de feed na mesma "fonte" para o round-robin.
+SOURCE_GROUP: Dict[str, str] = {
+    "Exame - Carreira": "Exame",
+    "Exame - Carreiras": "Exame",
+    "Exame - Vagas": "Exame",
+    "G1 - Concursos e Emprego": "G1",
+    "G1 - Trabalho e Carreira": "G1",
+}
 
 # Palavras-chave do tema "mercado de trabalho". Uma matéria é mantida se o
 # título ou resumo contiver ao menos uma delas (normalizada em minúsculas).
@@ -267,6 +285,13 @@ async def _fetch_feed(client: httpx.AsyncClient, feed: Dict[str, str]) -> List[D
 
 @router.get("/news", summary="Agrega notícias sobre mercado de trabalho")
 async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
+    import time
+    global _cache, _cache_at
+
+    now = time.monotonic()
+    if _cache is not None and _cache_at is not None and (now - _cache_at) < CACHE_TTL_SECONDS:
+        return _cache
+
     feeds = _parse_source_feeds()
     all_items: List[Dict[str, Any]] = []
     timeout = httpx.Timeout(REQUEST_TIMEOUT)
@@ -293,7 +318,8 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
     # variedade, e limita a quantidade por fonte para nenhuma dominar a lista.
     by_source: Dict[str, List[Dict[str, Any]]] = {}
     for item in all_items:
-        by_source.setdefault(item.get("source", "?"), []).append(item)
+        src = SOURCE_GROUP.get(item.get("source", "?"), item.get("source", "?"))
+        by_source.setdefault(src, []).append(item)
     sources = list(by_source.keys())
     cap = max(1, min(limit, MAX_ITEMS))
     max_per_source = max(1, int(round(cap / max(1, len(sources)))))
@@ -317,4 +343,7 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
             break
         idx += 1
 
-    return {"feeds": feeds, "count": len(diversified), "items": diversified}
+    result = {"feeds": feeds, "count": len(diversified), "items": diversified}
+    _cache = result
+    _cache_at = time.monotonic()
+    return result

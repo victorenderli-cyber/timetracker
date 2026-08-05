@@ -3,34 +3,50 @@ import { useAuthStore } from '@/store/authStore'
 import { getToken } from '@/utils/auth'
 import { Layout } from '@/components/Layout'
 import { DownloadPage } from '@/pages/DownloadPage'
-import { DashboardPage } from '@/pages/DashboardPage'
-import { ProjectsPage } from '@/pages/ProjectsPage'
-import { ProjectDetailPage } from '@/pages/ProjectDetailPage'
-import { TasksPage } from '@/pages/TasksPage'
-import { TimesheetPage } from '@/pages/TimesheetPage'
-import { ReportsPage } from '@/pages/ReportsPage'
-import { UsersPage } from '@/pages/UsersPage'
-import { HrPage } from '@/pages/HrPage'
 import { NewsHomePage } from '@/pages/news/NewsHomePage'
 import { PrivacyPage } from '@/pages/news/PrivacyPage'
 import { ToastContainer } from '@/store/toastStore'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Clock } from 'lucide-react'
 import { useThemeStore, applyTheme } from '@/store/themeStore'
+
+// Lazy: o TimeTracker (app) só carrega quando o usuário abre /app. A home do
+// portal continua leve para SEO/primeira pintura. As páginas usam export
+// nomeado; o lazy só aceita default, então adaptamos.
+const namedLazy = (loader: () => Promise<Record<string, unknown>>) =>
+  lazy(async () => {
+    const mod = await loader()
+    const key = Object.keys(mod).find((k) => k !== '__esModule')
+    const component = key ? (mod[key] as React.ComponentType) : null
+    if (!component) throw new Error('named export não encontrado')
+    return { default: component }
+  })
+
+const DashboardPage = namedLazy(() => import('@/pages/DashboardPage'))
+const ProjectsPage = namedLazy(() => import('@/pages/ProjectsPage'))
+const ProjectDetailPage = namedLazy(() => import('@/pages/ProjectDetailPage'))
+const TasksPage = namedLazy(() => import('@/pages/TasksPage'))
+const TimesheetPage = namedLazy(() => import('@/pages/TimesheetPage'))
+const ReportsPage = namedLazy(() => import('@/pages/ReportsPage'))
+const UsersPage = namedLazy(() => import('@/pages/UsersPage'))
+const HrPage = namedLazy(() => import('@/pages/HrPage'))
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center animate-pulse">
+        <Clock className="h-6 w-6" />
+      </div>
+    </div>
+  )
+}
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isLoading = useAuthStore((s) => s.isLoading)
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center animate-pulse">
-          <Clock className="h-7 w-7" />
-        </div>
-        <div className="text-gray-500 font-medium">Carregando aplicação...</div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!isAuthenticated) {
@@ -82,14 +98,70 @@ export default function App() {
             </PrivateRoute>
           }
         >
-          <Route path="/app" element={<DashboardPage />} />
-          <Route path="/app/projects" element={<ProjectsPage />} />
-          <Route path="/app/projects/:projectId" element={<ProjectDetailPage />} />
-          <Route path="/app/tasks" element={<TasksPage />} />
-          <Route path="/app/timesheet" element={<TimesheetPage />} />
-          <Route path="/app/reports" element={<ReportsPage />} />
-          <Route path="/app/hr" element={<HrPage />} />
-          <Route path="/app/users" element={<UsersPage />} />
+          <Route
+            path="/app"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <DashboardPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/projects"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ProjectsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/projects/:projectId"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ProjectDetailPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/tasks"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <TasksPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/timesheet"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <TimesheetPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/reports"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ReportsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/hr"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <HrPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/app/users"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <UsersPage />
+              </Suspense>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

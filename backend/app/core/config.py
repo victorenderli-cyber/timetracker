@@ -25,6 +25,9 @@ class Settings(BaseSettings):
 
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
+    # Habilita/desabilita o acesso demo (auto-login sem senha) do portal/app.
+    ENABLE_DEMO_LOGIN: bool = os.getenv("ENABLE_DEMO_LOGIN", "true").lower() in ("1", "true", "yes")
+
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "https://localhost", "capacitor://localhost", "http://localhost"]
 
     def __init__(self, **kwargs):

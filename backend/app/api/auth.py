@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import timedelta
 from app.db.session import get_db
+from app.core.config import settings
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.core.deps import get_current_active_user
 from app.models import User as UserModel
@@ -69,7 +70,12 @@ async def get_me(current_user: User = Depends(get_current_active_user)):
 
 @router.post("/demo", response_model=Token, summary="Acesso demo sem senha")
 async def demo_login(db: AsyncSession = Depends(get_db)):
-    """Emite um token do usuário admin sem exigir senha (para o app abrir direto)."""
+    """Emite um token do usuário admin sem exigir senha (para o app abrir direto).
+
+    Pode ser desligado via env ENABLE_DEMO_LOGIN=false.
+    """
+    if not settings.ENABLE_DEMO_LOGIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Demo login disabled")
     result = await db.execute(
         select(UserModel).where(UserModel.email == "admin@timetracker.com")
     )

@@ -311,6 +311,8 @@ for _model in (UserWithRelations, TimeEntry, TimeEntryWithRelations, DashboardSt
 
 
 class LeadCreate(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     email: Optional[EmailStr] = None
     full_name: Optional[str] = Field(None, max_length=255)
     role: Optional[str] = Field(None, max_length=100)

@@ -92,6 +92,17 @@ body {
   .table-cell {
     @apply px-4 py-3;
   }
+  .hidden-hp {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    font-size: 0;
+  }
 }
 
 .animate-fade-in {

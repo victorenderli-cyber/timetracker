@@ -8,6 +8,7 @@ export interface LeadInput {
   city?: string
   source?: string
   newsletter_optin?: boolean
+  website?: string
 }
 
 export interface QuizInput {

@@ -196,23 +196,67 @@ export function NewsHomePage() {
       </div>
 
       <main className="max-w-6xl mx-auto px-4 py-6 lg:py-8">
+        {!loading && !error && data && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400 mb-5">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              {new Set((data.feeds || []).map((f) => f.name)).size} fontes ativas
+            </span>
+            <span>{data.count} notícias</span>
+            {filtered.length > 0 && filtered.length !== data.count && (
+              <span>
+                · {filtered.length} resultado{filtered.length === 1 ? '' : 's'} para a busca
+              </span>
+            )}
+          </div>
+        )}
+
         {loading && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl h-64 animate-pulse" />
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden animate-pulse">
+                <div className="h-40 bg-gray-200 dark:bg-gray-700" />
+                <div className="p-4 space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                </div>
+              </div>
             ))}
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-red-700 dark:text-red-300">
-            Não foi possível carregar as notícias agora. Tente novamente em instantes.
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
+            <p className="text-red-700 dark:text-red-300 mb-3">
+              Não foi possível carregar as notícias agora. Tente novamente em instantes.
+            </p>
+            <button
+              onClick={() => { setLoading(true); setError(null); fetchNews(100).then((res) => { setData(res); setError(null) }).catch((e) => setError(e.message)).finally(() => setLoading(false)) }}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+            >
+              Tentar novamente
+            </button>
           </div>
         )}
 
         {!loading && !error && filtered.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center text-gray-500">
-            Nenhuma notícia encontrada para essa busca.
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-10 text-center">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
+              <Search className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Nenhuma notícia encontrada</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+              Não encontramos resultados para "{query}"{activeCategory !== 'Todos' ? ` em ${activeCategory}` : ''}. Tente
+              outra palavra ou limpe os filtros.
+            </p>
+            <button
+              onClick={() => { setQuery(''); setActiveCategory('Todos'); resetView() }}
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400"
+            >
+              Limpar filtros
+            </button>
           </div>
         )}
 
