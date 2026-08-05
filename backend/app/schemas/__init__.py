@@ -308,3 +308,36 @@ class TimeBankRow(BaseModel):
 # on first use; force resolution here so load works on Python 3.11 too.
 for _model in (UserWithRelations, TimeEntry, TimeEntryWithRelations, DashboardStats, TimeReport, HROverview):
     _model.model_rebuild()
+
+
+class LeadCreate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = Field(None, max_length=255)
+    role: Optional[str] = Field(None, max_length=100)
+    area: Optional[str] = Field(None, max_length=100)
+    city: Optional[str] = Field(None, max_length=100)
+    source: str = Field("portal", max_length=50)
+    newsletter_optin: bool = False
+
+
+class Lead(LeadCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+
+
+class QuizResponseCreate(BaseModel):
+    email: Optional[EmailStr] = None
+    question_key: str = Field(..., max_length=100)
+    answer: str = Field(..., max_length=1000)
+
+
+class QuizResponse(QuizResponseCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+
+
+class ContactSummary(BaseModel):
+    total_leads: int
+    total_quiz: int

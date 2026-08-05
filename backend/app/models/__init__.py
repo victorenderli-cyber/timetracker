@@ -138,3 +138,29 @@ class TimeEntry(Base):
     task_id = Column(Integer, ForeignKey("tasks.id", ondelete="SET NULL"), nullable=True)
     task = relationship("Task", back_populates="time_entries")
     approver = relationship("User", foreign_keys=[approved_by])
+
+
+class Lead(Base):
+    """Cadastro de leads / newsletter coletados no portal (opcional)."""
+    __tablename__ = "leads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), index=True, nullable=True)
+    full_name = Column(String(255), nullable=True)
+    role = Column(String(100), nullable=True)
+    area = Column(String(100), nullable=True)
+    city = Column(String(100), nullable=True)
+    source = Column(String(50), default="portal")  # portal | newsletter | quiz
+    newsletter_optin = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class QuizResponse(Base):
+    """Respostas da pesquisa/quiz opcional do portal."""
+    __tablename__ = "quiz_responses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), nullable=True)
+    question_key = Column(String(100), nullable=False)
+    answer = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

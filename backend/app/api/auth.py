@@ -67,6 +67,28 @@ async def get_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
+@router.post("/demo", response_model=Token, summary="Acesso demo sem senha")
+async def demo_login(db: AsyncSession = Depends(get_db)):
+    """Emite um token do usuário admin sem exigir senha (para o app abrir direto)."""
+    result = await db.execute(
+        select(UserModel).where(UserModel.email == "admin@timetracker.com")
+    )
+    user = result.scalar_one_or_none()
+    if not user or not user.is_active:
+        result = await db.execute(
+            select(UserModel).where(UserModel.role == "admin").limit(1)
+        )
+        user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="No admin user available")
+
+    access_token = create_access_token(
+        data={"sub": user.email, "user_id": user.id},
+        expires_delta=timedelta(minutes=7 * 24 * 60)
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @router.put("/me", response_model=User)
 async def update_me(
     user_update: UserCreate,

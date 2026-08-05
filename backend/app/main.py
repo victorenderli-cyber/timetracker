@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from app.core.config import settings
 from app.db.session import init_db
-from app.api import auth, users, projects, tasks, time_entries, hr, news
+from app.api import auth, users, projects, tasks, time_entries, hr, news, contacts
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -72,6 +72,7 @@ app.include_router(tasks.router, prefix=f"{settings.API_V1_STR}/tasks", tags=["t
 app.include_router(time_entries.router, prefix=f"{settings.API_V1_STR}/time-entries", tags=["time-entries"])
 app.include_router(hr.router, prefix=f"{settings.API_V1_STR}/hr", tags=["hr"])
 app.include_router(news.router, prefix=f"{settings.API_V1_STR}", tags=["news"])
+app.include_router(contacts.router, prefix=f"{settings.API_V1_STR}", tags=["contacts"])
 
 
 @app.get("/")
