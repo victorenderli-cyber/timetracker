@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     # Habilita/desabilita o acesso demo (auto-login sem senha) do portal/app.
     ENABLE_DEMO_LOGIN: bool = os.getenv("ENABLE_DEMO_LOGIN", "true").lower() in ("1", "true", "yes")
 
+    # Sincronização automática de notícias em background. Intervalo em segundos;
+    # 0 desliga o loop (cai para o fallback sob demanda).
+    NEWS_SYNC_ENABLED: bool = os.getenv("NEWS_SYNC_ENABLED", "true").lower() in ("1", "true", "yes")
+    NEWS_SYNC_INTERVAL_SECONDS: int = int(os.getenv("NEWS_SYNC_INTERVAL_SECONDS", "600"))
+    # Mantém no banco apenas notícias publicadas dentro desta janela.
+    NEWS_RETENTION_DAYS: int = int(os.getenv("NEWS_RETENTION_DAYS", "7"))
+
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "https://localhost", "capacitor://localhost", "http://localhost"]
 
     def __init__(self, **kwargs):

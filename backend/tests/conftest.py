@@ -20,15 +20,45 @@ _tmp.close()
 
 from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
-from app.db.session import init_db  # noqa: E402
+from app.db.session import init_db, async_session_maker  # noqa: E402
+from app.models import NewsArticle  # noqa: E402
+from sqlalchemy import select  # noqa: E402
+from datetime import datetime, timezone  # noqa: E402
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _setup_db():
     asyncio.run(init_db())
+
+    async def _seed_news():
+        # Dados fake para o endpoint /news não depender de rede no CI.
+        async with async_session_maker() as session:
+            existing = await session.execute(select(NewsArticle.id).limit(1))
+            if existing.scalar_one_or_none() is None:
+                session.add_all([
+                    NewsArticle(
+                        title="Empresa abre vagas de estágio",
+                        link="https://exemplo.com/noticia-1",
+                        description="Processo seletivo aberto para estudantes.",
+                        source="Exame",
+                        category="Vagas",
+                        published_at=datetime.now(timezone.utc),
+                    ),
+                    NewsArticle(
+                        title="Salário mínimo e mercado de trabalho",
+                        link="https://exemplo.com/noticia-2",
+                        description="Análise do piso salarial no país.",
+                        source="Agência Brasil",
+                        category="Salários",
+                        published_at=datetime.now(timezone.utc),
+                    ),
+                ])
+                await session.commit()
+
     from seed import seed
 
     asyncio.run(seed())
+    asyncio.run(_seed_news())
     yield
 
 

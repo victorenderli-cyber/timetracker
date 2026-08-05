@@ -165,3 +165,24 @@ class QuizResponse(Base):
     question_key = Column(String(100), nullable=False)
     answer = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class NewsArticle(Base):
+    """Notícia sobre mercado de trabalho coletada dos feeds RSS.
+
+    Alimentada automaticamente pelo serviço de sincronização em background
+    (app/services/news_sync.py), que roda no lifespan da aplicação e renova o
+    conteúdo a cada NEWS_SYNC_INTERVAL_SECONDS. O endpoint /news lê desta tabela.
+    """
+    __tablename__ = "news_articles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(500), nullable=False)
+    link = Column(String(1000), unique=True, index=True, nullable=False)
+    description = Column(Text, nullable=True)
+    source = Column(String(100), nullable=False)
+    category = Column(String(50), nullable=True)
+    image = Column(String(1000), nullable=True)
+    published_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

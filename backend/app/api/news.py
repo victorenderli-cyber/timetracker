@@ -2,11 +2,17 @@ import asyncio
 import logging
 import re
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.db.session import get_db
+from app.models import NewsArticle
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -28,11 +34,22 @@ REQUEST_TIMEOUT = 10.0
 MAX_ITEMS = 100
 MAX_ITEMS_PER_FEED = 40
 
-# Cache em memória do agregado: evita refazer todas as requisições RSS a cada
-# acesso ao portal (que podem ser centenas). Cada processo mantém seu cache.
-CACHE_TTL_SECONDS = 300  # 5 minutos
-_cache: Optional[Dict[str, Any]] = None
-_cache_at: Optional[float] = None
+# Estado do último sync (preenchido pelo serviço em background; também serve
+# de fallback sob demanda quando o loop está desligado).
+_last_sync_at: Optional[datetime] = None
+_last_sync_error: Optional[str] = None
+_sync_lock = asyncio.Lock()
+
+
+def _mark_synced(now: Optional[datetime] = None):
+    global _last_sync_at, _last_sync_error
+    _last_sync_at = now or datetime.now(timezone.utc)
+    _last_sync_error = None
+
+
+def _mark_sync_error(exc: Exception):
+    global _last_sync_error
+    _last_sync_error = str(exc)
 
 # Agrupa variações de nome de feed na mesma "fonte" para o round-robin.
 SOURCE_GROUP: Dict[str, str] = {
@@ -284,15 +301,9 @@ async def _fetch_feed(client: httpx.AsyncClient, feed: Dict[str, str]) -> List[D
         return []
 
 
-@router.get("/news", summary="Agrega notícias sobre mercado de trabalho")
-async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
-    import time
-    global _cache, _cache_at
-
-    now = time.monotonic()
-    if _cache is not None and _cache_at is not None and (now - _cache_at) < CACHE_TTL_SECONDS:
-        return _cache
-
+async def collect_items() -> List[Dict[str, Any]]:
+    """Busca todos os feeds, filtra, deduplica e classifica. Usado pelo serviço
+    de sincronização em background e como fallback sob demanda."""
     feeds = _parse_source_feeds()
     all_items: List[Dict[str, Any]] = []
     timeout = httpx.Timeout(REQUEST_TIMEOUT)
@@ -329,15 +340,28 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
         item["category"] = _category(item)
 
     # Ordena por data de publicação (mais recentes primeiro); itens sem data vão para o fim.
-    def _sort_key(item: Dict[str, Any]) -> str:
-        return item["published_at"] or ""
+    all_items.sort(key=lambda item: item["published_at"] or "", reverse=True)
+    return all_items
 
-    all_items.sort(key=_sort_key, reverse=True)
 
-    # Diversifica as fontes: intercala (round-robin) para o topo mostrar
-    # variedade, e limita a quantidade por fonte para nenhuma dominar a lista.
+def _to_dict(article: NewsArticle) -> Dict[str, Any]:
+    return {
+        "id": article.id,
+        "title": article.title,
+        "link": article.link,
+        "description": article.description,
+        "published_at": article.published_at.isoformat() if article.published_at else None,
+        "source": article.source,
+        "image": article.image,
+        "category": article.category,
+    }
+
+
+def _apply_diversification(items: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    """Intercala (round-robin) as fontes para o topo mostrar variedade, e limita
+    a quantidade por fonte para nenhuma dominar a lista."""
     by_source: Dict[str, List[Dict[str, Any]]] = {}
-    for item in all_items:
+    for item in items:
         src = SOURCE_GROUP.get(item.get("source", "?"), item.get("source", "?"))
         by_source.setdefault(src, []).append(item)
     sources = list(by_source.keys())
@@ -362,8 +386,130 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
         if took == 0:
             break
         idx += 1
+    return diversified
 
-    result = {"feeds": feeds, "count": len(diversified), "items": diversified}
-    _cache = result
-    _cache_at = time.monotonic()
-    return result
+
+async def refresh_news_feed(db: AsyncSession) -> int:
+    """Sincroniza o banco com os feeds RSS. Retorna o nº de notícias armazenadas.
+
+    Usada pelo serviço de background e pelo fallback sob demanda. Evita corridas
+    com um lock em memória (única instância).
+    """
+    global _last_sync_at, _last_sync_error
+    if _sync_lock.locked():
+        return -1  # outro refresh em andamento
+    async with _sync_lock:
+        try:
+            items = await collect_items()
+            cutoff = datetime.now(timezone.utc) - timedelta(days=settings.NEWS_RETENTION_DAYS)
+            stored = 0
+            for item in items:
+                published = _parse_datetime(item.get("published_at"))
+                # Não reinsere notícias fora da janela de retenção (a purga as
+                # removeria logo em seguida; evita re-trabalho a cada ciclo).
+                if published is not None and published < cutoff:
+                    continue
+                existing = await db.execute(
+                    select(NewsArticle.id).where(NewsArticle.link == item["link"])
+                )
+                if existing.scalar_one_or_none() is not None:
+                    continue
+                db.add(NewsArticle(
+                    title=item.get("title") or "",
+                    link=item.get("link") or "",
+                    description=item.get("description"),
+                    source=item.get("source") or "?",
+                    category=item.get("category") or DEFAULT_CATEGORY,
+                    image=item.get("image"),
+                    published_at=published,
+                ))
+                stored += 1
+            await db.commit()
+            await _purge_old(db)
+            _last_sync_at = datetime.now(timezone.utc)
+            _last_sync_error = None
+            return stored
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Falha na sincronização de notícias: {exc}")
+            _last_sync_error = str(exc)
+            await db.rollback()
+            return -1
+
+
+def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
+    """Converte ISO string (produzida por _parse_date) em datetime UTC."""
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except Exception:
+        return None
+
+
+async def _purge_old(db: AsyncSession):
+    """Remove notícias publicadas fora da janela de retenção."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=settings.NEWS_RETENTION_DAYS)
+    result = await db.execute(
+        select(NewsArticle.id).where(
+            (NewsArticle.published_at.is_(None)) | (NewsArticle.published_at < cutoff)
+        )
+    )
+    ids = [row[0] for row in result]
+    for article_id in ids:
+        article = await db.get(NewsArticle, article_id)
+        if article:
+            await db.delete(article)
+    await db.commit()
+
+
+@router.get("/news", summary="Agrega notícias sobre mercado de trabalho")
+async def get_news(limit: int = MAX_ITEMS, db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+    feeds = _parse_source_feeds()
+
+    # Lê do banco (populado pelo serviço em background). Se ainda estiver vazio
+    # (primeiro boot / loop desligado), faz um refresh sob demanda para nunca
+    # devolver a página sem notícias.
+    result = await db.execute(
+        select(NewsArticle).order_by(NewsArticle.published_at.desc().nulls_last(), NewsArticle.id.desc())
+    )
+    articles = list(result.scalars().all())
+
+    if not articles:
+        await refresh_news_feed(db)
+        result = await db.execute(
+            select(NewsArticle).order_by(NewsArticle.published_at.desc().nulls_last(), NewsArticle.id.desc())
+        )
+        articles = list(result.scalars().all())
+
+    items = [_to_dict(a) for a in articles]
+    diversified = _apply_diversification(items, limit)
+
+    return {
+        "feeds": feeds,
+        "count": len(diversified),
+        "items": diversified,
+        "stored": len(items),
+        "last_sync": _last_sync_at.isoformat() if _last_sync_at else None,
+        "last_error": _last_sync_error,
+        "sync_interval_seconds": settings.NEWS_SYNC_INTERVAL_SECONDS,
+        "sync_enabled": settings.NEWS_SYNC_ENABLED,
+    }
+
+
+@router.get("/news/status", summary="Estado da sincronização automática de notícias")
+async def news_status(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+    result = await db.execute(
+        select(NewsArticle.id).order_by(NewsArticle.published_at.desc().nulls_last())
+    )
+    stored = len(list(result.scalars().all()))
+    return {
+        "enabled": settings.NEWS_SYNC_ENABLED,
+        "interval_seconds": settings.NEWS_SYNC_INTERVAL_SECONDS,
+        "retention_days": settings.NEWS_RETENTION_DAYS,
+        "stored": stored,
+        "last_sync": _last_sync_at.isoformat() if _last_sync_at else None,
+        "last_error": _last_sync_error,
+    }

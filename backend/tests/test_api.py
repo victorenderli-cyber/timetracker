@@ -18,6 +18,26 @@ def test_news_endpoint(client):
     body = resp.json()
     assert "items" in body
     assert "feeds" in body
+    assert body["stored"] >= 2
+    assert body["count"] >= 1
+    assert "last_sync" in body
+    assert "sync_enabled" in body
+
+
+def test_news_status(client):
+    resp = client.get("/api/v1/news/status")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["stored"] >= 2
+    assert "interval_seconds" in body
+    assert "last_sync" in body
+
+
+def test_news_persisted_from_db(client):
+    resp = client.get("/api/v1/news?limit=20")
+    items = resp.json()["items"]
+    assert any(i["source"] == "Exame" for i in items)
+    assert any(i["source"] == "Agência Brasil" for i in items)
 
 
 def test_news_cache(client):

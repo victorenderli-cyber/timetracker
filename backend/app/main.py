@@ -50,7 +50,20 @@ async def lifespan(app: FastAPI):
         logger.info("Seed verificado no startup")
     except Exception as exc:
         logger.warning(f"Seed no startup ignorada: {exc}")
+
+    # Atualização automática de notícias em background (feeds RSS -> banco).
+    try:
+        from app.services.news_sync import start as start_news_sync
+        await start_news_sync()
+    except Exception as exc:
+        logger.warning(f"Início da sincronização de notícias falhou: {exc}")
     yield
+
+    try:
+        from app.services.news_sync import stop as stop_news_sync
+        await stop_news_sync()
+    except Exception as exc:
+        logger.warning(f"Encerramento da sincronização de notícias falhou: {exc}")
 
 
 app = FastAPI(
