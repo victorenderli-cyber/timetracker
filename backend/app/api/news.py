@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -303,6 +304,25 @@ async def get_news(limit: int = MAX_ITEMS) -> Dict[str, Any]:
 
     # Mantém apenas notícias relevantes ao tema mercado de trabalho.
     all_items = [item for item in all_items if _is_relevant(item)]
+
+    # Deduplica por URL (e, como fallback, por título normalizado), mantendo o
+    # item mais antigo/recente — feeds variantes podem trazer a mesma matéria.
+    seen_url: set = set()
+    seen_title: set = set()
+    deduped: List[Dict[str, Any]] = []
+    for item in all_items:
+        url_key = (item.get("link") or "").strip().rstrip("/")
+        title_key = re.sub(r"[^a-z0-9]+", "", (item.get("title") or "").lower())
+        if url_key and url_key in seen_url:
+            continue
+        if len(title_key) > 30 and title_key in seen_title:
+            continue
+        if url_key:
+            seen_url.add(url_key)
+        if title_key:
+            seen_title.add(title_key)
+        deduped.append(item)
+    all_items = deduped
 
     # Atribui categoria por palavras-chave (para filtro no portal).
     for item in all_items:

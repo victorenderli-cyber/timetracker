@@ -320,12 +320,14 @@ class LeadCreate(BaseModel):
     city: Optional[str] = Field(None, max_length=100)
     source: str = Field("portal", max_length=50)
     newsletter_optin: bool = False
+    consent: Optional[bool] = None  # LGPD: usuário aceitou a política de privacidade
 
 
 class Lead(LeadCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     created_at: datetime
+    consent: Optional[datetime] = None
 
 
 class QuizResponseCreate(BaseModel):

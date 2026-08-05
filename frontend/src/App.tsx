@@ -5,6 +5,7 @@ import { Layout } from '@/components/Layout'
 import { DownloadPage } from '@/pages/DownloadPage'
 import { NewsHomePage } from '@/pages/news/NewsHomePage'
 import { PrivacyPage } from '@/pages/news/PrivacyPage'
+import { AdminPage } from '@/pages/news/AdminPage'
 import { ToastContainer } from '@/store/toastStore'
 import { lazy, Suspense, useEffect } from 'react'
 import { Clock } from 'lucide-react'
@@ -86,6 +87,7 @@ export default function App() {
         {/* Portal público de notícias */}
         <Route path="/" element={<NewsHomePage />} />
         <Route path="/privacidade" element={<PrivacyPage />} />
+        <Route path="/admin" element={<AdminPage />} />
 
         {/* TimeTracker: aplicativo (web) e app Android */}
         <Route path="/download" element={<DownloadPage />} />

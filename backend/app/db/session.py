@@ -37,6 +37,9 @@ _MIGRATIONS = [
         ("approved_by", "INTEGER"),
         ("approved_at", "TIMESTAMP"),
     ]),
+    ("leads", [
+        ("consent", "TIMESTAMP"),
+    ]),
 ]
 
 

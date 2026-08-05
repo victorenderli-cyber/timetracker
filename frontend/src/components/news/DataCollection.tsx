@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { contactsApi, LeadInput } from '@/api/contacts'
 import { Button } from '@/components/ui/Button'
 import { toast, toastError } from '@/store/toastStore'
@@ -38,6 +39,7 @@ export function DataCollection() {
   // Lead
   const [lead, setLead] = useState<LeadInput>({})
   const [leadOptin, setLeadOptin] = useState(false)
+  const [leadConsent, setLeadConsent] = useState(false)
   const [hp, setHp] = useState('')
 
   // Quiz
@@ -55,9 +57,13 @@ export function DataCollection() {
 
   const submitNewsletter = async () => {
     if (!newsEmail.trim()) return
+    if (!leadConsent) {
+      toastError('Para assinar, aceite a política de privacidade.')
+      return
+    }
     setSending(true)
     try {
-      await contactsApi.submitLead({ email: newsEmail.trim(), newsletter_optin: true, [HONEYPOT]: hp })
+      await contactsApi.submitLead({ email: newsEmail.trim(), newsletter_optin: true, consent: true, [HONEYPOT]: hp })
       setSent(true)
       toast('Inscrição confirmada! Você receberá novidades do mercado de trabalho.')
     } catch (e: any) {
@@ -72,12 +78,17 @@ export function DataCollection() {
       toastError('Informe pelo menos um e-mail para contato.')
       return
     }
+    if (!leadConsent) {
+      toastError('Para enviar, aceite a política de privacidade.')
+      return
+    }
     setSending(true)
     try {
       await contactsApi.submitLead({
         ...lead,
         email: lead.email.trim(),
         newsletter_optin: leadOptin,
+        consent: true,
         [HONEYPOT]: hp,
       })
       setSent(true)
@@ -179,30 +190,48 @@ export function DataCollection() {
 
         <div className="p-5 pt-2">
           {openSection === 'newsletter' && (
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="email"
-                  value={newsEmail}
-                  onChange={(e) => setNewsEmail(e.target.value)}
-                  placeholder="Seu e-mail"
-                  className="input !pl-10 w-full"
-                />
-                <input
-                  type="text"
-                  value={hp}
-                  onChange={(e) => setHp(e.target.value)}
-                  className="hidden-hp"
-                  name={HONEYPOT}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                />
+            <div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="email"
+                    value={newsEmail}
+                    onChange={(e) => setNewsEmail(e.target.value)}
+                    placeholder="Seu e-mail"
+                    className="input !pl-10 w-full"
+                  />
+                  <input
+                    type="text"
+                    value={hp}
+                    onChange={(e) => setHp(e.target.value)}
+                    className="hidden-hp"
+                    name={HONEYPOT}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+                </div>
+                <Button onClick={submitNewsletter} loading={sending} className="sm:w-auto">
+                  Assinar newsletter
+                </Button>
               </div>
-              <Button onClick={submitNewsletter} loading={sending} className="sm:w-auto">
-                Assinar newsletter
-              </Button>
+              <label className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={leadConsent}
+                  onChange={(e) => setLeadConsent(e.target.checked)}
+                  className="rounded mt-0.5"
+                  required
+                />
+                <span>
+                  Ao assinar, você concorda com a{' '}
+                  <Link to="/privacidade" className="text-primary-600 hover:underline dark:text-primary-400">
+                    política de privacidade
+                  </Link>{' '}
+                (LGPD).
+              </span>
+            </label>
             </div>
           )}
 
@@ -253,6 +282,22 @@ export function DataCollection() {
                   className="rounded"
                 />
                 Quero receber a newsletter semanal
+              </label>
+              <label className="sm:col-span-2 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={leadConsent}
+                  onChange={(e) => setLeadConsent(e.target.checked)}
+                  className="rounded mt-0.5"
+                  required
+                />
+                <span>
+                  Li e aceito a{' '}
+                  <Link to="/privacidade" className="text-primary-600 hover:underline dark:text-primary-400">
+                    política de privacidade
+                  </Link>{' '}
+                  (LGPD). Meus dados serão usados apenas para contato e novidades.
+                </span>
               </label>
               <input
                 type="text"

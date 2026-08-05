@@ -4,7 +4,8 @@ import { fetchNews, NewsItem, NewsResponse, NEWS_CATEGORIES, NewsCategory } from
 import { AdSlot } from '@/components/ad/AdSlot'
 import { DataCollection } from '@/components/news/DataCollection'
 import { useAuthStore } from '@/store/authStore'
-import { Timer, Newspaper, Briefcase, Search, ExternalLink, ChevronDown, ImageOff } from 'lucide-react'
+import { useThemeStore } from '@/store/themeStore'
+import { Timer, Newspaper, Briefcase, Search, ExternalLink, ChevronDown, ImageOff, Sun, Moon } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const PAGE_SIZE = 12
@@ -88,6 +89,8 @@ export function NewsHomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const demoLogin = useAuthStore((s) => s.demoLogin)
   const navigate = useNavigate()
+  const theme = useThemeStore((s) => s.theme)
+  const toggleTheme = useThemeStore((s) => s.toggle)
 
   const openApp = async () => {
     if (!isAuthenticated) {
@@ -154,6 +157,14 @@ export function NewsHomePage() {
             <Link to="/privacidade" className="hover:text-primary-600">Privacidade</Link>
           </nav>
           <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+              title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <button
               onClick={openApp}
               className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary-600/25"
@@ -304,7 +315,8 @@ export function NewsHomePage() {
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex flex-col bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      style={{ ['--stagger' as any]: Math.min(i, 12) }}
+                      className="group flex flex-col bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger"
                     >
                       <div className="h-40 news-card-image">
                         <NewsImage src={item.image} title={item.title} />
@@ -356,6 +368,7 @@ export function NewsHomePage() {
           <div className="flex justify-center gap-4 text-xs">
             <Link to="/privacidade" className="hover:text-primary-600">Política de Privacidade</Link>
             <a href="/download" className="hover:text-primary-600">Baixar o app</a>
+            <Link to="/admin" className="text-gray-400 hover:text-primary-600" title="Painel de dados">Painel</Link>
           </div>
           <p className="text-xs text-gray-400">
             Conteúdos reproduzidos integralmente de suas fontes originais, a título informativo.

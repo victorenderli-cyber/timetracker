@@ -28,6 +28,20 @@ export function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">1.1. Cadastro voluntário (leads, newsletter e pesquisa)</h2>
+            <p>
+              De forma <strong>totalmente opcional</strong>, você pode preencher nosso formulário de cadastro,
+              assinar a newsletter ou responder à pesquisa rápida. Ao fazê-lo, coletamos apenas o que você
+              informar (nome, e-mail, cargo, cidade e respostas da pesquisa), e guardamos o momento do seu
+              consentimento (data e hora) conforme a LGPD (Lei 13.709/2018).
+            </p>
+            <p className="mt-3">
+              Esses dados são usados exclusivamente para entrar em contato com você sobre novidades e para
+              melhorar o conteúdo do portal. Não são vendidos nem compartilhados com terceiros.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">2. Publicidade e cookies</h2>
             <p>
               Este site pode exibir anúncios do Google AdSense. O Google e seus parceiros podem usar cookies
@@ -39,7 +53,7 @@ export function PrivacyPage() {
               .
             </p>
             <p className="mt-3">
-              Tap ainda assim pode permitir que o Google e seus parceiros usem cookies para fins de medição
+              Ainda assim, pode permitir que o Google e seus parceiros usem cookies para fins de medição
               e publicidade. Consulte a{' '}
               <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">
                 Política de Privacidade do Google
@@ -49,7 +63,16 @@ export function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">3. App móvel (TimeTracker)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">3. Seus direitos (LGPD)</h2>
+            <p>
+              Você pode, a qualquer momento, solicitar o acesso, a correção ou a exclusão dos seus dados
+              pessoais coletados pelo portal (por exemplo, desinscrever-se da newsletter ou pedir a remoção
+              do seu cadastro). Basta entrar em contato pelo e-mail indicado na seção de contato.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">4. App móvel (TimeTracker)</h2>
             <p>
               No aplicativo Android <strong>TimeTracker</strong> (monitoramento de horas de trabalho), os
               dados fornecidos pelos usuários (nome, e-mail, controle de horas) são armazenados de forma
@@ -59,10 +82,10 @@ export function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">4. Contato</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">5. Contato</h2>
             <p>
-              Para dúvidas sobre esta política ou sobre seus dados, entre em contato pelo endereço indicado
-              pelo administrador do site.
+              Para dúvidas sobre esta política ou sobre seus dados (incluindo pedidos de exclusão), entre em
+              contato pelo endereço indicado pelo administrador do site.
             </p>
           </section>
         </div>

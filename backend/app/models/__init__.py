@@ -152,6 +152,7 @@ class Lead(Base):
     city = Column(String(100), nullable=True)
     source = Column(String(50), default="portal")  # portal | newsletter | quiz
     newsletter_optin = Column(Boolean, default=False)
+    consent = Column(DateTime(timezone=True), nullable=True)  # LGPD: quando o usuário consentiu
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

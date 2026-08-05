@@ -133,6 +133,31 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Entrada escalonada para grids de cards (delay via --stagger). */
+.animate-stagger {
+  animation: fadeUp 0.45s ease-out both;
+  animation-delay: calc(var(--stagger, 0) * 60ms);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-stagger,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
