@@ -4,7 +4,10 @@ import { getToken } from '@/utils/auth'
 import { Layout } from '@/components/Layout'
 import { DownloadPage } from '@/pages/DownloadPage'
 import { NewsHomePage } from '@/pages/news/NewsHomePage'
+import { NewsDetailPage } from '@/pages/news/NewsDetailPage'
 import { PrivacyPage } from '@/pages/news/PrivacyPage'
+import { TermsPage } from '@/pages/news/TermsPage'
+import { AboutPage } from '@/pages/news/AboutPage'
 import { AdminPage } from '@/pages/news/AdminPage'
 import { ToastContainer } from '@/store/toastStore'
 import { lazy, Suspense, useEffect } from 'react'
@@ -86,7 +89,10 @@ export default function App() {
       <Routes>
         {/* Portal público de notícias */}
         <Route path="/" element={<NewsHomePage />} />
+        <Route path="/noticia/:id" element={<NewsDetailPage />} />
         <Route path="/privacidade" element={<PrivacyPage />} />
+        <Route path="/termos" element={<TermsPage />} />
+        <Route path="/sobre" element={<AboutPage />} />
         <Route path="/admin" element={<AdminPage />} />
 
         {/* TimeTracker: aplicativo (web) e app Android */}

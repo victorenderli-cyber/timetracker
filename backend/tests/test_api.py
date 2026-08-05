@@ -33,6 +33,41 @@ def test_news_status(client):
     assert "last_sync" in body
 
 
+def test_news_item_detail(client):
+    # pega o primeiro item da lista e busca por id
+    listing = client.get("/api/v1/news?limit=20").json()
+    assert listing["stored"] >= 1
+    first = listing["items"][0]
+    resp = client.get(f"/api/v1/news/{first['id']}")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["title"] == first["title"]
+    assert body["link"] == first["link"]
+
+
+def test_news_item_not_found(client):
+    resp = client.get("/api/v1/news/99999999")
+    assert resp.status_code == 404
+
+
+def test_rss_feed(client):
+    resp = client.get("/api/v1/rss")
+    assert resp.status_code == 200
+    assert "application/rss+xml" in resp.headers["content-type"]
+    assert "<?xml" in resp.text
+    assert "<rss" in resp.text
+    assert "<channel>" in resp.text
+    assert "<title>Carreira" in resp.text
+    assert "<item>" in resp.text
+
+
+def test_security_headers(client):
+    resp = client.get("/")
+    assert resp.headers.get("x-content-type-options") == "nosniff"
+    assert resp.headers.get("x-frame-options") == "SAMEORIGIN"
+    assert resp.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+
+
 def test_news_persisted_from_db(client):
     resp = client.get("/api/v1/news?limit=20")
     items = resp.json()["items"]

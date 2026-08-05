@@ -5,55 +5,11 @@ import { AdSlot } from '@/components/ad/AdSlot'
 import { DataCollection } from '@/components/news/DataCollection'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
-import { Timer, Newspaper, Briefcase, Search, ExternalLink, ChevronDown, ImageOff, Sun, Moon } from 'lucide-react'
+import { Timer, Newspaper, Briefcase, Search, ExternalLink, ChevronDown, Sun, Moon } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { formatDate, CategoryBadge, NewsImage } from '@/components/news/NewsUI'
 
 const PAGE_SIZE = 12
-
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
-
-const categoryColors: Record<string, string> = {
-  Concursos: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  Vagas: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  'Salários': 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
-  Carreira: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-  Economia: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  Trabalho: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
-}
-
-function CategoryBadge({ category }: { category?: NewsCategory }) {
-  const cat = category || 'Trabalho'
-  return (
-    <span className={cn('inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full', categoryColors[cat] || categoryColors.Trabalho)}>
-      {cat}
-    </span>
-  )
-}
-
-function NewsImage({ src, title }: { src?: string | null; title: string }) {
-  const [error, setError] = useState(false)
-  if (!src || error) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
-        <ImageOff className="h-8 w-8 text-gray-400 dark:text-gray-500" />
-      </div>
-    )
-  }
-  return (
-    <img
-      src={src}
-      alt={title}
-      loading="lazy"
-      onError={() => setError(true)}
-      className="w-full h-full object-cover"
-    />
-  )
-}
 
 function RelatedSidebar({ items }: { items: NewsItem[] }) {
   return (
@@ -153,6 +109,7 @@ export function NewsHomePage() {
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300">
             <span className="text-primary-600 font-semibold dark:text-primary-400">Notícias</span>
+            <Link to="/sobre" className="hover:text-primary-600">Sobre</Link>
             <Link to="/download" className="hover:text-primary-600">App</Link>
             <Link to="/privacidade" className="hover:text-primary-600">Privacidade</Link>
           </nav>
@@ -275,10 +232,9 @@ export function NewsHomePage() {
           <>
             {/* Destaque */}
             {featured && (
-              <a
-                href={featured.link}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to={`/noticia/${featured.id}`}
+                state={{ item: featured }}
                 className="block bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow mb-7 group"
               >
                 <div className="grid lg:grid-cols-2">
@@ -302,7 +258,7 @@ export function NewsHomePage() {
                     </div>
                   </div>
                 </div>
-              </a>
+              </Link>
             )}
 
             {/* Corpo */}
@@ -310,11 +266,10 @@ export function NewsHomePage() {
               <div className="flex-1 min-w-0">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {shown.map((item, i) => (
-                    <a
+                    <Link
                       key={i}
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      to={`/noticia/${item.id}`}
+                      state={{ item }}
                       style={{ ['--stagger' as any]: Math.min(i, 12) }}
                       className="group flex flex-col bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-stagger"
                     >
@@ -336,7 +291,7 @@ export function NewsHomePage() {
                           <Briefcase className="h-3 w-3" /> {item.source}
                         </div>
                       </div>
-                    </a>
+                    </Link>
                   ))}
                 </div>
 
@@ -367,6 +322,9 @@ export function NewsHomePage() {
           </p>
           <div className="flex justify-center gap-4 text-xs">
             <Link to="/privacidade" className="hover:text-primary-600">Política de Privacidade</Link>
+            <Link to="/termos" className="hover:text-primary-600">Termos de Uso</Link>
+            <Link to="/sobre" className="hover:text-primary-600">Sobre</Link>
+            <a href="/api/v1/rss" className="hover:text-primary-600" title="Assinar o feed RSS">RSS</a>
             <a href="/download" className="hover:text-primary-600">Baixar o app</a>
             <Link to="/admin" className="text-gray-400 hover:text-primary-600" title="Painel de dados">Painel</Link>
           </div>

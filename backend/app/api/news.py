@@ -6,7 +6,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -513,3 +514,72 @@ async def news_status(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
         "last_sync": _last_sync_at.isoformat() if _last_sync_at else None,
         "last_error": _last_sync_error,
     }
+
+
+@router.get("/news/{article_id}", summary="Detalhe de uma notícia por id")
+async def get_news_item(article_id: int, db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+    article = await db.get(NewsArticle, article_id)
+    if article is None:
+        raise HTTPException(status_code=404, detail="Notícia não encontrada")
+    return _to_dict(article)
+
+
+def _rss_escape(text: str) -> str:
+    """Escapa caracteres especiais XML para o feed RSS."""
+    if not text:
+        return ""
+    return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            .replace('"', "&quot;").replace("'", "&apos;"))
+
+
+def _rfc822(dt: Optional[datetime]) -> str:
+    """Formata data no padrão RFC 822 exigido por RSS (sem horário local)."""
+    if dt is None:
+        return datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
+
+
+@router.get("/rss", summary="Feed RSS do portal", response_class=Response)
+async def rss_feed(db: AsyncSession = Depends(get_db)) -> Response:
+    """Feed RSS 2.0 próprio do portal (para leitores/apps de RSS)."""
+    result = await db.execute(
+        select(NewsArticle).order_by(NewsArticle.published_at.desc().nulls_last(), NewsArticle.id.desc()).limit(50)
+    )
+    articles = list(result.scalars().all())
+    site_url = "https://timetracker-7awm.onrender.com"
+
+    items_xml = []
+    for a in articles:
+        desc = _rss_escape(a.description or a.title or "")
+        image_tag = ""
+        if a.image:
+            image_tag = f'<enclosure url="{_rss_escape(a.image)}" type="image/jpeg" />'
+        items_xml.append(
+            "<item>"
+            f"<title>{_rss_escape(a.title or '')}</title>"
+            f"<link>{_rss_escape(a.link or '')}</link>"
+            f"<guid isPermaLink=\"false\">{_rss_escape(a.link or str(a.id))}</guid>"
+            f"<description>{desc}</description>"
+            f"<pubDate>{_rfc822(a.published_at)}</pubDate>"
+            f"<source>{_rss_escape(a.source or '')}</source>"
+            f"<category>{_rss_escape(a.category or '')}</category>"
+            f"{image_tag}"
+            "</item>"
+        )
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
+        "<channel>\n"
+        "<title>Carreira &amp; Trabalho</title>\n"
+        "<link>https://timetracker-7awm.onrender.com/</link>\n"
+        "<description>Notícias do mercado de trabalho brasileiro: concursos, vagas, salários, carreira e economia.</description>\n"
+        "<language>pt-br</language>\n"
+        "<ttl>60</ttl>\n"
+        '<atom:link href="https://timetracker-7awm.onrender.com/api/v1/rss" rel="self" type="application/rss+xml" />\n'
+        + "\n".join(items_xml)
+        + "\n</channel>\n</rss>\n"
+    )
+    return Response(content=xml, media_type="application/rss+xml; charset=utf-8")

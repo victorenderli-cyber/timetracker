@@ -86,7 +86,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 class CacheControlMiddleware(BaseHTTPMiddleware):
-    """Headers de cache: assets com hash podem ficar imutáveis; HTML/API não."""
+    """Headers de cache e segurança: assets com hash ficam imutáveis; HTML/API não."""
 
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
@@ -97,6 +97,17 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
             response.headers["Cache-Control"] = "no-cache"
         else:
             response.headers["Cache-Control"] = "public, max-age=3600"
+
+        # Headers de segurança (aplicados a respostas HTML e API).
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        )
+        # HTTPS em produção (Render termina TLS no proxy).
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
 
