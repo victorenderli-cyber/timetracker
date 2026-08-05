@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { getToken } from '@/utils/auth'
 import { Layout } from '@/components/Layout'
 import { DownloadPage } from '@/pages/DownloadPage'
 import { DashboardPage } from '@/pages/DashboardPage'
@@ -41,6 +42,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const fetchMe = useAuthStore((s) => s.fetchMe)
+  const demoLogin = useAuthStore((s) => s.demoLogin)
   const location = useLocation()
   const theme = useThemeStore((s) => s.theme)
   const initTheme = useThemeStore((s) => s.init)
@@ -54,8 +56,12 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    fetchMe()
-  }, [fetchMe, location.pathname])
+    if (getToken()) {
+      fetchMe()
+    } else {
+      demoLogin().catch(() => {})
+    }
+  }, [fetchMe, demoLogin, location.pathname])
 
   return (
     <>

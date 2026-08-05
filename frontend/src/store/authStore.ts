@@ -9,6 +9,7 @@ interface AuthStore {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  demoLogin: () => Promise<void>
   register: (userData: { email: string; full_name: string; password: string; role?: 'manager' | 'employee' }) => Promise<void>
   logout: () => void
   fetchMe: () => Promise<void>
@@ -26,6 +27,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ token: data.access_token, isAuthenticated: true })
     const me = await authApi.me()
     set({ user: me })
+  },
+
+  demoLogin: async () => {
+    const data = await authApi.demo()
+    setToken(data.access_token)
+    set({ token: data.access_token, isAuthenticated: true, isLoading: false })
+    try {
+      const me = await authApi.me()
+      set({ user: me })
+    } catch {
+      set({ user: null })
+    }
   },
 
   register: async (userData) => {

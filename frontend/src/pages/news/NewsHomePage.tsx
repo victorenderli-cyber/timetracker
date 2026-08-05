@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { fetchNews, NewsItem, NewsResponse, NEWS_CATEGORIES, NewsCategory } from '@/api/news'
 import { AdSlot } from '@/components/ad/AdSlot'
-import { LoginModal } from '@/components/LoginModal'
+import { DataCollection } from '@/components/news/DataCollection'
 import { useAuthStore } from '@/store/authStore'
-import { Timer, Newspaper, Briefcase, LogIn, Search, ExternalLink, ChevronDown, ImageOff } from 'lucide-react'
+import { Timer, Newspaper, Briefcase, Search, ExternalLink, ChevronDown, ImageOff } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const PAGE_SIZE = 12
@@ -85,8 +85,20 @@ export function NewsHomePage() {
   const [data, setData] = useState<NewsResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [loginOpen, setLoginOpen] = useState(false)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const demoLogin = useAuthStore((s) => s.demoLogin)
+  const navigate = useNavigate()
+
+  const openApp = async () => {
+    if (!isAuthenticated) {
+      try {
+        await demoLogin()
+      } catch {
+        // segue para o app mesmo assim
+      }
+    }
+    navigate('/app')
+  }
 
   // Estado de filtro/busca
   const [query, setQuery] = useState('')
@@ -142,21 +154,12 @@ export function NewsHomePage() {
             <Link to="/privacidade" className="hover:text-primary-600">Privacidade</Link>
           </nav>
           <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <Link
-                to="/app"
-                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary-600/25"
-              >
-                <Timer className="h-4 w-4" /> Meus projetos
-              </Link>
-            ) : (
-              <button
-                onClick={() => setLoginOpen(true)}
-                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary-600/25"
-              >
-                <LogIn className="h-4 w-4" /> Entrar
-              </button>
-            )}
+            <button
+              onClick={openApp}
+              className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-primary-600/25"
+            >
+              <Timer className="h-4 w-4" /> Abrir app
+            </button>
           </div>
         </div>
       </header>
@@ -299,7 +302,9 @@ export function NewsHomePage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-6 text-center text-sm text-gray-500">
+      <DataCollection />
+
+      <footer className="border-t border-gray-200 dark:border-gray-800 py-6 mt-6 text-center text-sm text-gray-500">
         <div className="max-w-6xl mx-auto px-4 flex flex-col gap-2">
           <p className="flex items-center justify-center gap-2">
             <Timer className="h-4 w-4" /> Carreira & Trabalho — agregador de notícias do mercado de trabalho
@@ -313,8 +318,6 @@ export function NewsHomePage() {
           </p>
         </div>
       </footer>
-
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   )
 }

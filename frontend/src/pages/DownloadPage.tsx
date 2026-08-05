@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
+import { useAuthStore } from '@/store/authStore'
 import { Timer, Download, Smartphone, Globe, QrCode, MonitorDown } from 'lucide-react'
 import { AdSlot } from '@/components/ad/AdSlot'
 
@@ -9,6 +10,7 @@ const QR_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' 
 
 export function DownloadPage() {
   const navigate = useNavigate()
+  const demoLogin = useAuthStore((s) => s.demoLogin)
   const [installEvt, setInstallEvt] = useState<any>(null)
 
   useState(() => {
@@ -24,6 +26,15 @@ export function DownloadPage() {
     if (installEvt) {
       installEvt.prompt()
     }
+  }
+
+  const openApp = async () => {
+    try {
+      await demoLogin()
+    } catch {
+      // segue para o app mesmo assim
+    }
+    navigate('/app')
   }
 
   return (
@@ -91,12 +102,12 @@ export function DownloadPage() {
                   <MonitorDown className="h-4 w-4 mr-2" /> Instalar como app
                 </Button>
               ) : (
-                <Button className="w-full !py-3" onClick={() => navigate('/')}>
-                  Criar conta
+                <Button className="w-full !py-3" onClick={openApp}>
+                  Abrir na web
                 </Button>
               )}
-              <Button variant="secondary" className="w-full !py-3" onClick={() => navigate('/')}>
-                Já tenho conta — Entrar
+              <Button variant="secondary" className="w-full !py-3" onClick={openApp}>
+                Começar a usar
               </Button>
             </div>
             <div className="mt-6 p-4 bg-gray-50 rounded-xl text-sm text-gray-500">
@@ -112,7 +123,7 @@ export function DownloadPage() {
         </div>
 
         <div className="text-center text-white/60 text-sm mt-6">
-          <Link to="/" className="hover:underline">Já é da equipe? Entrar</Link>
+          <Link to="/" className="hover:underline">Voltar ao portal de notícias</Link>
         </div>
 
         <div className="mt-8 bg-white/90 rounded-3xl p-4 shadow-lg">
